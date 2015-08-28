@@ -15,7 +15,7 @@ sm_cli_args_t* sm_cli_parse(const int argc, const char** argv)
     exit(EXIT_FAILURE);
   }
 
-  args = malloc(sizeof(*args));
+  ASSERT((args = malloc(sizeof(*args))), "Couldn't allocate memory");
   args->sched_alg = (enum sm_sched_algorithms)strtoul(argv[1], NULL, 10);
 
   if (args->sched_alg > SM_RT_RIGID_READLINES ||
@@ -32,6 +32,38 @@ sm_cli_args_t* sm_cli_parse(const int argc, const char** argv)
   return args;
 }
 
-void sm_cli_parse_input(const char* filename)
+
+sm_in_entry_t* sm_parse_trace(const char* trace)
 {
+  sm_in_entry_t* in_trace;
+  char* curr;
+  char* end;
+
+  ASSERT((in_trace = malloc(sizeof(*in_trace))),
+         "sm_parse_trace: couldn't allocate mem");
+  // t0 : float
+  in_trace->t0 = strtof(trace, &curr);
+  curr++;
+
+  // pname: string
+  end = strchr(curr, ' ');
+
+  ASSERT(end, "%s", SM_ERR_MALFORMED_TRACE);
+  strncpy(in_trace->pname, curr, end - curr);
+  curr = end;
+
+  // dt: float
+  in_trace->dt = strtof(curr, &end);
+  ASSERT(curr != end, "%s", SM_ERR_MALFORMED_TRACE);
+  curr = end;
+
+  // deadline: float
+  in_trace->deadline = strtof(curr, &end);
+  ASSERT(curr != end, "%s", SM_ERR_MALFORMED_TRACE);
+  curr = end;
+
+  // p: int
+  in_trace->p = strtol(curr, NULL, 10);
+
+  return in_trace;
 }

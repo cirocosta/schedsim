@@ -1,10 +1,13 @@
 #ifndef SCHEDSIM__CLI_H
 #define SCHEDSIM__CLI_H
 
+#include "schedsim/common.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#include <ctype.h>
 
 static const char* SM_CLI_HELP_TXT =
     "Usage:\n"
@@ -46,6 +49,10 @@ static const char* SM_CLI_HELP_TXT =
     "\ttr:     clock time that the process took to execute\n"
     "\n";
 
+const static char* SM_ERR_MALFORMED_TRACE =
+    "ERROR: Malformed trace.\n"
+    "\tShould be: <t0 : f> <pname : str> <dt : f> <deadline : f> <p : int>";
+
 enum sm_sched_algorithms {
   SM_FIRSTCOME_FIRSTSERVED = 1,
   SM_S_JOB_FIRST,
@@ -62,8 +69,22 @@ typedef struct sm_cli_args_t {
   int debug;
 } sm_cli_args_t;
 
+typedef struct sm_in_entry_t {
+  float t0;             // time at which the process comes
+  char pname[NAME_MAX]; // process' name
+  float dt;             // cpu real time
+  float deadline;       // time at which the process must stop
+  int p;                // priority
+} sm_in_entry_t;
+
+typedef struct sm_out_entry_t {
+  sm_in_entry_t* in_entry; // input trace that generated it
+  float tf;                // timestamp of process termination
+  float tr;                // clock time that it took to execute (tf-t0)
+} sm_out_entry_t;
+
 void sm_cli_help();
 sm_cli_args_t* sm_cli_parse(const int argc, const char** argv);
-void sm_cli_parse_input(const char* filename);
+sm_in_entry_t* sm_parse_trace(const char* trace);
 
 #endif
