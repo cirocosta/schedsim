@@ -5,46 +5,38 @@ LIBS =
 DEFS = -D_GNU_SOURCE 
 INCLUDES = -I/usr/include -I./include
 
-PROGRAM = yairc
-LIB = src/libyairc.a
+PROGRAM = schedsim
+LIB = src/libschedsim.a
 SOURCE = src/main.c
 TESTS_DIR = tests/
 
 BUILD := debug
+CFLAGS := -std=gnu99 -Wall -g -DDEBUG
 
 
 #			--		generation
 
-cflags.debug := -Wall -g -DDEBUG
-cflags.release := -03 -DNDEBUG
-CFLAGS := -std=gnu99 ${cflags.${BUILD}}
-
+HEADERS = $(shell find include/ -name '*.h')
 SRCS = $(shell find src/ -name '*.c')
 LIB_OBJS := $(patsubst %.c, %.o, $(filter-out $(SOURCE), $(SRCS)))
 TESTS:= $(patsubst %.c, %.out, $(shell find $(TESTS_DIR) -name '*.c'))
 
-all: $(PROGRAM) test depend
+all: $(PROGRAM) test 
 
-$(PROGRAM): $(LIB) $(SOURCE)
+$(PROGRAM): $(LIB) $(SOURCE) $(HEADERS)
 	$(CC) $(CFLAGS) $(SOURCE) $(DEFS) $(INCLUDES) $(LIBS) -o $@ $<
 
-$(LIB): $(LIB_OBJS)
+$(LIB): $(LIB_OBJS) 
 	$(AR) rvs $@ $^
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) -c -o $@ $<
 
 
-.PHONY: clean test depend
+.PHONY: clean test 
 
-depend: .depend
-
-.depend: $(SRCS)
-	@$(CC) $(CFLAGS) $(INCLUDES) -MM $^ -MF ./.depend
-
-include .depend
-
-test: $(LIB) $(TESTS)
+test: $(LIB) $(SOURCES) $(TESTS) $(HEADERS)
+	@$(foreach test_exec,$(TESTS),./$(test_exec);)
 
 %.out: %.c
 	$(CC) $(CFLAGS) $< $(DEFS) $(INCLUDES) $(LIBS) -o $@ $(LIB) 
