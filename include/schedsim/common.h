@@ -2,6 +2,7 @@
 #define SCHEDSIM__COMMON_H
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #define FREE(__ptr)                                                            \
@@ -34,11 +35,19 @@
 #define ASSERT(__cond, __msg, ...)                                             \
   do {                                                                         \
     if (!(__cond)) {                                                           \
-      fprintf(stderr, "\n" __BASE_FILE__ " %2d\n", __LINE__);                   \
+      fprintf(stderr, "\n" __BASE_FILE__ " %2d\n", __LINE__);                  \
       fprintf(stderr, "Assertion `%s` failed\n", #__cond);                     \
       fprintf(stderr, "\t" __msg "\n", ##__VA_ARGS__);                         \
       exit(EXIT_FAILURE);                                                      \
     }                                                                          \
   } while (0)
+
+#ifndef NDEBUG
+#define DASSERT(__cond, __msg, ...) ASSERT(__cond, __msg, #__VA_ARGS__)
+#else
+#define DASSERT(__cond, __msg, ...)                                            \
+  do {                                                                         \
+  } while (0)
+#endif
 
 #endif // ! SCHEDSIM__COMMON_H

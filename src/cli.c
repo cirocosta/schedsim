@@ -16,9 +16,9 @@ sm_cli_args_t* sm_cli_parse(const int argc, const char** argv)
   }
 
   ASSERT((args = malloc(sizeof(*args))), "Couldn't allocate memory");
-  args->sched_alg = (enum sm_sched_algorithms)strtoul(argv[1], NULL, 10);
+  args->sched_alg = (sm_algorithms_e)strtoul(argv[1], NULL, 10);
 
-  if (args->sched_alg > SM_RT_RIGID_READLINES ||
+  if (args->sched_alg > SM_RT_RIGID_DEADLINES ||
       args->sched_alg < SM_FIRSTCOME_FIRSTSERVED) {
     sm_cli_help();
     fprintf(stderr, "%s\n", "Error: invalid scheduling algorithm number.");
@@ -30,40 +30,4 @@ sm_cli_args_t* sm_cli_parse(const int argc, const char** argv)
   args->debug = argc == 5;
 
   return args;
-}
-
-
-sm_in_entry_t* sm_parse_trace(const char* trace)
-{
-  sm_in_entry_t* in_trace;
-  char* curr;
-  char* end;
-
-  ASSERT((in_trace = malloc(sizeof(*in_trace))),
-         "sm_parse_trace: couldn't allocate mem");
-  // t0 : float
-  in_trace->t0 = strtof(trace, &curr);
-  curr++;
-
-  // pname: string
-  end = strchr(curr, ' ');
-
-  ASSERT(end, "%s", SM_ERR_MALFORMED_TRACE);
-  strncpy(in_trace->pname, curr, end - curr);
-  curr = end;
-
-  // dt: float
-  in_trace->dt = strtof(curr, &end);
-  ASSERT(curr != end, "%s", SM_ERR_MALFORMED_TRACE);
-  curr = end;
-
-  // deadline: float
-  in_trace->deadline = strtof(curr, &end);
-  ASSERT(curr != end, "%s", SM_ERR_MALFORMED_TRACE);
-  curr = end;
-
-  // p: int
-  in_trace->p = strtol(curr, NULL, 10);
-
-  return in_trace;
 }

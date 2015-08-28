@@ -1,0 +1,13 @@
+#ifndef SCHEDSIM__ALGORITHMS_H
+#define SCHEDSIM__ALGORITHMS_H
+
+typedef enum sm_sched_algorithms {
+  SM_FIRSTCOME_FIRSTSERVED = 1,
+  SM_S_JOB_FIRST,
+  SM_S_REMAINING_TIME_NEXT,
+  SM_ROUND_ROBIN,
+  SM_SCHED_WITH_PRIORITY,
+  SM_RT_RIGID_DEADLINES
+} sm_algorithms_e;
+
+#endif
