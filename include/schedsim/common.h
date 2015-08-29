@@ -41,7 +41,7 @@
 #define ASSERT(__cond, __msg, ...)                                             \
   do {                                                                         \
     if (!(__cond)) {                                                           \
-      fprintf(stderr, "\n" __BASE_FILE__ " %2d\n", __LINE__);                  \
+      fprintf(stderr, "\n" __BASE_FILE__ ": %2d\n", __LINE__);                 \
       fprintf(stderr, "Assertion `%s` failed\n", #__cond);                     \
       fprintf(stderr, "\t" __msg "\n", ##__VA_ARGS__);                         \
       exit(EXIT_FAILURE);                                                      \
@@ -64,7 +64,7 @@
 
 // dynamically queries for the maximum
 // number of concurrent processes that a linux
-// system allows. 
+// system allows.
 #if 0
 inline static size_t sm_get_pid_max()
 {
