@@ -64,14 +64,9 @@ void test3()
 
 int main(int argc, char* argv[])
 {
-  test1();
-  LOG("trace::Test1 passed");
-  test2();
-  LOG("trace::Test2 passed");
-  test3();
-  LOG("trace::Test3 passed");
-
-  LOG("%s\n", "test-trace: OK!\n");
+  TEST(test1);
+  TEST(test2);
+  TEST(test3);
 
   return 0;
 }

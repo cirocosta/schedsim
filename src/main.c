@@ -1,17 +1,18 @@
 #include "schedsim/cli.h"
 #include "schedsim/common.h"
-#include "schedsim/trace.h"
+#include "schedsim/algorithms.h"
 
 #include <stdio.h>
 
 int main(const int argc, const char* argv[])
 {
   sm_cli_args_t* args = sm_cli_parse(argc, argv);
-  size_t entries_count;
-  sm_trace_t** entries = sm_get_traces(args->in_fname, &entries_count);
+  size_t traces_count;
+  sm_trace_t** traces = sm_get_traces(args->in_fname, &traces_count);
 
   switch (args->sched_alg) {
     case SM_FIRSTCOME_FIRSTSERVED:
+      sm_sched_firstcome_firstserved(traces);
       break;
     case SM_S_JOB_FIRST:
       break;
@@ -26,7 +27,7 @@ int main(const int argc, const char* argv[])
   }
 
   FREE(args);
-  FREE_ARR(entries, entries_count);
+  FREE_ARR(traces, traces_count);
 
   return 0;
 }

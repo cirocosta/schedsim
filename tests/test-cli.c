@@ -28,9 +28,7 @@ void test1()
 
 int main(int argc, char* argv[])
 {
-  test1();
-
-  fprintf(stderr, "%s\n", "test-cli: OK!\n");
+  TEST(test1);
 
   return EXIT_SUCCESS;
 }

@@ -39,7 +39,13 @@ Output Parameters:
 ## Building
 
 ```sh
-$ make 
+$ export BUILD=Release
+$ make  
+
+# or 
+
+$ export BUILD=Release
+$ make  
 ```
 
 

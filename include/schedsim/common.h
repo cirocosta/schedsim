@@ -4,6 +4,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+/* static size_t SM_PID_MAX = 0; */
 
 #define FREE(__ptr)                                                            \
   do {                                                                         \
@@ -42,12 +48,43 @@
     }                                                                          \
   } while (0)
 
+#define TEST(__test)                                                           \
+  do {                                                                         \
+    __test();                                                                  \
+    LOG("%s: %s OK!", __BASE_FILE__, #__test);                                 \
+  } while (0)
+
 #ifndef NDEBUG
 #define DASSERT(__cond, __msg, ...) ASSERT(__cond, __msg, #__VA_ARGS__)
 #else
 #define DASSERT(__cond, __msg, ...)                                            \
   do {                                                                         \
   } while (0)
+#endif
+
+// dynamically queries for the maximum
+// number of concurrent processes that a linux
+// system allows. 
+#if 0
+inline static size_t sm_get_pid_max()
+{
+  int fd = -1;
+  char buf[32] = { 0 };
+  char *end = NULL;
+
+  if (SM_PID_MAX)
+    return SM_PID_MAX;
+
+  // FIXME provide error checking
+  fd = open("/proc/sys/kernel/pid_max", 'r');
+  read(fd, buf, 32);
+  close(fd);
+
+  SM_PID_MAX = strtol(buf, &end, 10);
+  DASSERT((end != buf), "Couldn't convert %s to size_t", buf);
+
+  return SM_PID_MAX;
+}
 #endif
 
 #endif // ! SCHEDSIM__COMMON_H

@@ -18,11 +18,13 @@ typedef struct sm_trace_t {
   int p;                // priority
 } sm_trace_t;
 
-typedef struct sm_out_trace {
+typedef struct sm_out_trace_t {
   sm_trace_t* trace; // input trace that generated it
   float tf;          // timestamp of process termination
   float tr;          // clock time that it took to execute (tf-t0)
-} sm_out_trace;
+} sm_out_trace_t;
+
+void sm_print_out_trace(sm_out_trace_t);
 
 sm_trace_t* sm_parse_trace(const char* trace);
 sm_trace_t** sm_get_traces(const char* fname, size_t* entries);

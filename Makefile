@@ -10,11 +10,14 @@ LIB = src/libschedsim.a
 SOURCE = src/main.c
 TESTS_DIR = tests/
 
-BUILD := debug
-CFLAGS := -std=gnu99 -Wall -Werror -O1 -g -DDEBUG
+BUILD ?= Debug
 
 
 #			--		generation
+
+cflags.Debug := -Wall -Werror -g -DDEBUG -fsanitize=address
+cflags.Release := -O3 -DNDEBUG
+CFLAGS := -std=gnu99 ${cflags.${BUILD}}
 
 HEADERS = $(shell find include/ -name '*.h')
 SRCS = $(shell find src/ -name '*.c')
