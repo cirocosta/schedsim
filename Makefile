@@ -11,7 +11,7 @@ SOURCE = src/main.c
 TESTS_DIR = tests/
 
 BUILD := debug
-CFLAGS := -std=gnu99 -Wall -g -DDEBUG
+CFLAGS := -std=gnu99 -Wall -Werror -O1 -g -DDEBUG
 
 
 #			--		generation

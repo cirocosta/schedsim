@@ -1,5 +1,6 @@
 #include "schedsim/cli.h"
 #include "schedsim/common.h"
+#include "schedsim/trace.h"
 
 #include <stdio.h>
 
