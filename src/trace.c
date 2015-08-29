@@ -20,7 +20,7 @@ sm_trace_t* sm_parse_trace(const char* trace)
 
   DASSERT(end, "%s", SM_ERR_MALFORMED_TRACE);
   strncpy(in_trace->pname, curr, end - curr);
-  in_trace->pname[end-curr] = '\0';
+  in_trace->pname[end - curr] = '\0';
   curr = end;
 
   // dt: float

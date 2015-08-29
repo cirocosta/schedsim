@@ -6,10 +6,14 @@
 
 void test1()
 {
-  sm_trace_t* trace = sm_parse_trace("1 process0 2 3 -20");
+  sm_trace_t* trace = sm_parse_trace("1 process0 1 3 -20");
   sm_trace_t* traces[] = { trace };
 
   sm_sched_firstcome_firstserved(traces, 1); 
+
+  LOG("start: %f", trace->t0);
+  LOG("final: %f", trace->out.tf);
+  LOG("elapsed: %f", trace->out.tr);
 
   sm_trace_delete(trace);
 }

@@ -5,12 +5,14 @@
 #include "schedsim/common.h"
 #include "schedsim/queue.h"
 
-#include <signal.h>
+#include <sys/signal.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <errno.h>
-#include <time.h>
 
+#ifndef BILLION
 #define BILLION 1000000000
+#endif
 
 typedef enum sm_algorithms_e {
   SM_FIRSTCOME_FIRSTSERVED = 1,
@@ -21,7 +23,7 @@ typedef enum sm_algorithms_e {
   SM_RT_RIGID_DEADLINES
 } sm_algorithms_e;
 
-void sm_waste_time(float time_to_spend);
+void sm_waste_time(long long time_to_spend);
 
 /**
  * First Come, First Served.

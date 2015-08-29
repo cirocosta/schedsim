@@ -10,19 +10,22 @@
 #include <string.h>
 #include <stdlib.h>
 
+// TODO consider double precision
+typedef struct sm_out_trace_t {
+  double tf; // timestamp of process termination
+  double tr; // clock time that it took to execute (tf-t0)
+  double t0; // actual start
+} sm_out_trace_t;
+
 typedef struct sm_trace_t {
   float t0;             // time at which the process comes
   char pname[NAME_MAX]; // process' name
   float dt;             // cpu real time
   float deadline;       // time at which the process must stop
   int p;                // priority
-} sm_trace_t;
 
-typedef struct sm_out_trace_t {
-  sm_trace_t* trace; // input trace that generated it
-  float tf;          // timestamp of process termination
-  float tr;          // clock time that it took to execute (tf-t0)
-} sm_out_trace_t;
+  sm_out_trace_t out; // result
+} sm_trace_t;
 
 void sm_print_out_trace(sm_out_trace_t);
 
