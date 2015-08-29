@@ -12,11 +12,11 @@ void test1()
 
   ASSERT(sm_queue_empty(q) == 1, "Must start empty");
 
-  sm_queue_insert(q, hue);
+  ASSERT(sm_queue_insert(q, hue) == 0, "Must receive it's 'ticket' correctly");
   front = sm_queue_front(q);
   ASSERT(front == hue, "");
 
-  sm_queue_insert(q, br);
+  ASSERT(sm_queue_insert(q, br) == 1, "Must receive it's 'ticket' correctly");
   ASSERT(sm_queue_empty(q) == 0, "Not empty after inserts");
 
   front = sm_queue_front(q);

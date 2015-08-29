@@ -1,5 +1,5 @@
 #ifndef SCHEDSIM__TRACE_H
-#define SCHEDSIM__TRACE_H 
+#define SCHEDSIM__TRACE_H
 
 #include "schedsim/common.h"
 
@@ -28,5 +28,9 @@ void sm_print_out_trace(sm_out_trace_t);
 
 sm_trace_t* sm_parse_trace(const char* trace);
 sm_trace_t** sm_get_traces(const char* fname, size_t* entries);
+static inline void sm_trace_delete(sm_trace_t* trace)
+{
+  FREE(trace);
+}
 
 #endif

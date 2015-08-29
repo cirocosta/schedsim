@@ -2,6 +2,15 @@
 #define SCHEDSIM__ALGORITHMS_H
 
 #include "schedsim/trace.h"
+#include "schedsim/common.h"
+#include "schedsim/queue.h"
+
+#include <signal.h>
+#include <pthread.h>
+#include <errno.h>
+#include <time.h>
+
+#define BILLION 1000000000
 
 typedef enum sm_algorithms_e {
   SM_FIRSTCOME_FIRSTSERVED = 1,
@@ -25,6 +34,6 @@ void sm_waste_time(float time_to_spend);
  * implementation - which could grow indefinetly but would have to pay for that)
  * .
  */
-void sm_sched_firstcome_firstserved(sm_trace_t** traces);
+void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size);
 
 #endif

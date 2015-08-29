@@ -17,14 +17,18 @@ void sm_queue_delete(sm_queue_t* q)
   FREE(q);
 }
 
-void sm_queue_insert(sm_queue_t* q, void* elem)
+unsigned sm_queue_insert(sm_queue_t* q, void* elem)
 {
+  unsigned pos = q->r;
+
   q->elems[q->r] = elem;
 
   if (q->r == q->n - 1)
     q->r = 0;
   else
     q->r++;
+
+  return pos;
 }
 
 void sm_queue_remove(sm_queue_t* q)

@@ -18,7 +18,7 @@ sm_queue_t* sm_queue_create();
 void sm_queue_delete(sm_queue_t* q);
 
 void sm_queue_remove(sm_queue_t* q);
-void sm_queue_insert(sm_queue_t* q, void* elem);
+unsigned sm_queue_insert(sm_queue_t* q, void* elem);
 
 static inline int sm_queue_empty(sm_queue_t* q)
 {

@@ -2,10 +2,15 @@
 #include "schedsim/common.h"
 #include "schedsim/algorithms.h"
 
+#include <time.h>
 #include <stdio.h>
 
 int main(const int argc, const char* argv[])
 {
+  sm_sched_firstcome_firstserved(NULL, 0);
+  sleep(2);
+  LOG("hueh");
+#if 0
   sm_cli_args_t* args = sm_cli_parse(argc, argv);
   size_t traces_count;
   sm_trace_t** traces = sm_get_traces(args->in_fname, &traces_count);
@@ -28,6 +33,6 @@ int main(const int argc, const char* argv[])
 
   FREE(args);
   FREE_ARR(traces, traces_count);
-
+#endif
   return 0;
 }

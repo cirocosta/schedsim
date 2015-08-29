@@ -48,10 +48,10 @@
     }                                                                          \
   } while (0)
 
-#define TEST(__test)                                                           \
+#define TEST(__test, ...)                                                      \
   do {                                                                         \
     __test();                                                                  \
-    LOG("%s: %s OK!", __BASE_FILE__, #__test);                                 \
+    LOG("%s: %s:" #__VA_ARGS__ " OK!", __BASE_FILE__, #__test);                \
   } while (0)
 
 #ifndef NDEBUG
