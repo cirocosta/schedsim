@@ -15,7 +15,7 @@ BUILD ?= Debug
 
 #			--		generation
 
-cflags.Debug := -Wall -Werror -g -DDEBUG -fsanitize=address
+cflags.Debug := -Wall -Werror -g -DDEBUG
 cflags.Release := -O3 -DNDEBUG
 CFLAGS := -std=gnu99 ${cflags.${BUILD}}
 

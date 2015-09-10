@@ -4,6 +4,7 @@
 #include "schedsim/common.h"
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -23,8 +24,9 @@ typedef struct sm_trace_t {
   float dt;             // cpu real time
   float deadline;       // time at which the process must stop
   int p;                // priority
-  pthread_cond_t cond;
   pthread_t tid;
+  sem_t sem;
+  int blocked;
 
   sm_out_trace_t out; // result
 } sm_trace_t;

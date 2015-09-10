@@ -1,6 +1,8 @@
 #ifndef SCHEDSIM__COMMON_H
 #define SCHEDSIM__COMMON_H
 
+#include "schedsim/constants.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,9 +11,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-/* static size_t SM_PID_MAX = 0; */
-
-#define BILLION 1000000000
 
 #define FREE(__ptr)                                                            \
   do {                                                                         \

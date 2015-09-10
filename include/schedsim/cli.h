@@ -2,7 +2,7 @@
 #define SCHEDSIM__CLI_H
 
 #include "schedsim/common.h"
-#include "schedsim/algorithms.h"
+#include "schedsim/scheduler.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -54,7 +54,7 @@ const static char* SM_ERR_MALFORMED_TRACE =
     "\tShould be: <t0 : f> <pname : str> <dt : f> <deadline : f> <p : int>";
 
 typedef struct sm_cli_args_t {
-  sm_algorithms_e sched_alg;
+  sm_schedulers_e sched_alg;
   char in_fname[PATH_MAX];
   char out_fname[PATH_MAX];
   int debug;

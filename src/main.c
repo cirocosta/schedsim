@@ -1,6 +1,4 @@
-#include "schedsim/cli.h"
 #include "schedsim/common.h"
-#include "schedsim/algorithms.h"
 
 #include <time.h>
 #include <stdio.h>

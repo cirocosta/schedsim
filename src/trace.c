@@ -1,23 +1,21 @@
 #include "schedsim/trace.h"
-#include "schedsim/algorithms.h"
 
 static const char SM_SPACE = ' ';
 
 sm_trace_t* sm_trace_create()
 {
   sm_trace_t* trace = malloc(sizeof(*trace));
-
   PASSERT(trace, "couldn't allocate mem");
 
   *trace = (sm_trace_t){0};
-  pthread_cond_init(&trace->cond, NULL);
+  sem_init(&trace->sem, 0, 0);
 
   return trace;
 }
 
 void sm_trace_destroy(sm_trace_t* trace)
 {
-  pthread_cond_destroy(&trace->cond);
+  sem_destroy(&trace->sem);
   FREE(trace);
 }
 

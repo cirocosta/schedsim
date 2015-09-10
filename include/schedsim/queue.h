@@ -2,7 +2,6 @@
 #define SCHEDSIM__QUEUE_H
 
 // from /proc/sys/kernel/pid_max
-#define SM_PID_MAX 32768
 
 #include "schedsim/common.h"
 #include <pthread.h>
