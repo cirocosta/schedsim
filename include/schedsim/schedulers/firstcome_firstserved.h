@@ -1,77 +1,57 @@
 #ifndef SCHEDSIM__FIRSTCOME_FIRSTSERVER_H
-#define SCHEDSIM__FIRSTCOME_FIRSTSERVER_H 
+#define SCHEDSIM__FIRSTCOME_FIRSTSERVER_H
 
 #include "schedsim/common.h"
 #include "schedsim/queue.h"
 #include "schedsim/algorithms.h"
 
 #include <pthread.h>
+#include <errno.h>
 #include <sys/time.h>
 
-static unsigned available_cpus = 0;
-static pthread_mutex_t g_mutex_queue = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_cond_counter = PTHREAD_COND_INITIALIZER;
-static pthread_cond_t g_cond_queue = PTHREAD_COND_INITIALIZER;
-static sm_queue_t* g_queue;
+typedef struct sm_scheduler_t {
+  sm_queue_t* proc_queue;
+  pthread_mutex_t proc_mutex;
+  unsigned available_cpus;
+} sm_scheduler_t;
 
-
-void process_func(union sigval val)
+void* process(void* arg)
 {
-  sm_trace_t* trace = (sm_trace_t*)val.sival_ptr;
-  unsigned my_ticket;
-  struct timeval t_start;
-  struct timeval t_end;
+  LOGERR("A process was spawned! %lu", pthread_self());
 
-  ASSERT(!pthread_mutex_lock(&g_mutex_queue), "Couldn't acquire mutex");
-  my_ticket = sm_queue_insert(g_queue, trace);
-
-  while (!((my_ticket == g_queue->f) && (available_cpus > 0))) {
-    ASSERT(!pthread_cond_wait(&trace->cond, &g_mutex_queue), "");
-  }
-  sm_queue_remove(g_queue);
-  ASSERT(!pthread_mutex_unlock(&g_mutex_queue), "Couldn't unlock mutex");
-
-  gettimeofday(&t_start, NULL);
-  sm_waste_time(BILLION * trace->dt);
-  gettimeofday(&t_end, NULL);
-
-  ASSERT(!pthread_mutex_lock(&g_mutex_queue), "Couldn't acquire mutex");
-  pthread_cond_broadcast(&g_cond_queue);
-
-  if (sm_queue_empty(g_queue))
-    pthread_cond_signal(&g_cond_counter);
-
-  ASSERT(!pthread_mutex_unlock(&g_mutex_queue), "Couldn't unlock mutex");
-
-  trace->out.tr = (t_end.tv_usec - t_start.tv_usec);
-  trace->out.tf = trace->t0 + trace->out.tr;
+  pthread_exit(EXIT_SUCCESS);
 }
 
-
-
+// main
 void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
 {
   unsigned i = 0;
-  sm_trace_t* trace = NULL;
+  sigset_t intmask, block_set;
+  int sig;
+  pthread_t tids[100] = {0};
 
-  g_queue = sm_queue_create();
-
-  for (; i < traces_size; i++) {
-    trace = traces[i];
-    sm_create_timer(trace, process_func);
+  if ((sigemptyset(&block_set) == -1) ||
+      (sigaddset(&block_set, SIGUSR1) == -1) ||
+      (sigprocmask(SIG_BLOCK, &block_set, NULL) == -1)) {
+    LOGERR("Error setting thread signal mask: %s", strerror(errno));
+    exit(EXIT_FAILURE);
   }
 
-  ASSERT(!pthread_mutex_lock(&g_mutex_queue), "");
-  ASSERT(!pthread_cond_wait(&g_cond_counter, &g_mutex_queue), "");
-  while (!sm_queue_empty(g_queue))
-    ASSERT(!pthread_cond_wait(&g_cond_counter, &g_mutex_queue), "");
-  ASSERT(!pthread_mutex_unlock(&g_mutex_queue), "");
+  if ((sigemptyset(&intmask) == -1) || (sigaddset(&intmask, SIGUSR1) == -1)) {
+    perror("sig_setting error:");
+    exit(EXIT_FAILURE);
+  }
 
-  pthread_mutex_destroy(&g_mutex_queue);
-  pthread_cond_destroy(&g_cond_queue);
-  pthread_cond_destroy(&g_cond_counter);
-  sm_queue_destroy(g_queue);
+  for (; i < traces_size; i++) {
+    sm_create_timer(traces[i]);
+  }
+
+  i = 0;
+  while (1) {
+    sigwait(&intmask, &sig);
+    fprintf(stderr, "%s\n", "Signal Received!");
+    pthread_create(&tids[i], NULL, &process, NULL);
+  }
 }
-
 
 #endif

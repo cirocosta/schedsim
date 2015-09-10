@@ -19,6 +19,6 @@ typedef enum sm_algorithms_e {
 } sm_algorithms_e;
 
 void sm_waste_time(long long time_to_spend);
-timer_t sm_create_timer(sm_trace_t* trace, void(func)(union sigval));
+timer_t sm_create_timer(sm_trace_t* trace);
 
 #endif

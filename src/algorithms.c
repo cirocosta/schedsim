@@ -23,7 +23,7 @@ void sm_waste_time(long long nanosecs)
   }
 }
 
-timer_t sm_create_timer(sm_trace_t* trace, void(func)(union sigval))
+timer_t sm_create_timer(sm_trace_t* trace)
 {
   // trace->STUFF comes in secs (floating)
   long long nanosecs = BILLION * trace->t0;
@@ -31,10 +31,9 @@ timer_t sm_create_timer(sm_trace_t* trace, void(func)(union sigval))
   struct sigevent se;
   timer_t tid;
 
-  se.sigev_notify = SIGEV_THREAD;
+  se.sigev_notify = SIGEV_SIGNAL;
+  se.sigev_signo = SIGUSR1;
   se.sigev_value.sival_ptr = trace;
-  se.sigev_notify_function = func;
-  se.sigev_notify_attributes = NULL;
 
   ts.it_value.tv_sec = nanosecs / BILLION;
   ts.it_value.tv_nsec = nanosecs % BILLION;
