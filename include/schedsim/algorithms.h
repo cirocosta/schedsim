@@ -3,16 +3,11 @@
 
 #include "schedsim/trace.h"
 #include "schedsim/common.h"
-#include "schedsim/queue.h"
 
 #include <sys/signal.h>
 #include <sys/time.h>
 #include <pthread.h>
 #include <errno.h>
-
-#ifndef BILLION
-#define BILLION 1000000000
-#endif
 
 typedef enum sm_algorithms_e {
   SM_FIRSTCOME_FIRSTSERVED = 1,
@@ -24,18 +19,6 @@ typedef enum sm_algorithms_e {
 } sm_algorithms_e;
 
 void sm_waste_time(long long time_to_spend);
-
-/**
- * First Come, First Served.
- *
- * Uses a FIFO implemented as a circular queue as it's data structure.
- * The decision for using a circular queue is the fact that even though the OS
- * will be limited to a maximum number of processes running simultaneously
- * it won't have to constantly deal with dynamic memory allocation and
- * deallocation all the time (compared to a linked-list-based FIFO
- * implementation - which could grow indefinetly but would have to pay for that)
- * .
- */
-void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size);
+timer_t sm_create_timer(sm_trace_t* trace, void(func)(union sigval));
 
 #endif

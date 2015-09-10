@@ -3,6 +3,7 @@
 
 #include "schedsim/common.h"
 
+#include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -10,7 +11,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-// TODO consider double precision
 typedef struct sm_out_trace_t {
   double tf; // timestamp of process termination
   double tr; // clock time that it took to execute (tf-t0)
@@ -23,17 +23,18 @@ typedef struct sm_trace_t {
   float dt;             // cpu real time
   float deadline;       // time at which the process must stop
   int p;                // priority
+  pthread_cond_t cond;
 
   sm_out_trace_t out; // result
 } sm_trace_t;
 
-void sm_print_out_trace(sm_out_trace_t);
+// ctor & dtor
+sm_trace_t* sm_trace_create();
+void sm_trace_destroy(sm_trace_t* trace);
 
+// general
+void sm_print_out_trace(sm_out_trace_t);
 sm_trace_t* sm_parse_trace(const char* trace);
 sm_trace_t** sm_get_traces(const char* fname, size_t* entries);
-static inline void sm_trace_delete(sm_trace_t* trace)
-{
-  FREE(trace);
-}
 
 #endif

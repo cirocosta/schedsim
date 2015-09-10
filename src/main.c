@@ -7,9 +7,11 @@
 
 int main(const int argc, const char* argv[])
 {
-  sm_sched_firstcome_firstserved(NULL, 0);
-  sleep(2);
-  LOG("hueh");
+#ifndef NDEBUG
+  setbuf(stdout, NULL);
+#endif
+  /* sm_sched_firstcome_firstserved(NULL, 0); */
+
 #if 0
   sm_cli_args_t* args = sm_cli_parse(argc, argv);
   size_t traces_count;

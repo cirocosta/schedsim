@@ -11,6 +11,8 @@
 
 /* static size_t SM_PID_MAX = 0; */
 
+#define BILLION 1000000000
+
 #define FREE(__ptr)                                                            \
   do {                                                                         \
     free(__ptr);                                                               \
@@ -48,6 +50,15 @@
     }                                                                          \
   } while (0)
 
+#define PASSERT(condition, message, ...)                                       \
+  do {                                                                         \
+    if (!(condition)) {                                                        \
+      fprintf(stderr, message, ##__VA_ARGS__);                                 \
+      fprintf(stderr, "%s\n", strerror(errno));                                \
+      exit(EXIT_FAILURE);                                                      \
+    }                                                                          \
+  } while (0)
+
 #define TEST(__test, ...)                                                      \
   do {                                                                         \
     __test();                                                                  \
@@ -60,31 +71,6 @@
 #define DASSERT(__cond, __msg, ...)                                            \
   do {                                                                         \
   } while (0)
-#endif
-
-// dynamically queries for the maximum
-// number of concurrent processes that a linux
-// system allows.
-#if 0
-inline static size_t sm_get_pid_max()
-{
-  int fd = -1;
-  char buf[32] = { 0 };
-  char *end = NULL;
-
-  if (SM_PID_MAX)
-    return SM_PID_MAX;
-
-  // FIXME provide error checking
-  fd = open("/proc/sys/kernel/pid_max", 'r');
-  read(fd, buf, 32);
-  close(fd);
-
-  SM_PID_MAX = strtol(buf, &end, 10);
-  DASSERT((end != buf), "Couldn't convert %s to size_t", buf);
-
-  return SM_PID_MAX;
-}
 #endif
 
 #endif // ! SCHEDSIM__COMMON_H

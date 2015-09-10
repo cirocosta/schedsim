@@ -3,14 +3,31 @@
 
 static const char SM_SPACE = ' ';
 
+sm_trace_t* sm_trace_create()
+{
+  sm_trace_t* trace = malloc(sizeof(*trace));
+
+  PASSERT(trace, "couldn't allocate mem");
+
+  *trace = (sm_trace_t){0};
+  pthread_cond_init(&trace->cond, NULL);
+
+  return trace;
+}
+
+void sm_trace_destroy(sm_trace_t* trace)
+{
+  pthread_cond_destroy(&trace->cond);
+  FREE(trace);
+}
+
 sm_trace_t* sm_parse_trace(const char* trace)
 {
   sm_trace_t* in_trace;
   char* curr = NULL;
   char* end = NULL;
 
-  ASSERT((in_trace = malloc(sizeof(*in_trace))),
-         "sm_parse_trace: couldn't allocate mem");
+  in_trace = sm_trace_create();
   // t0 : float
   in_trace->t0 = strtof(trace, &curr);
   curr++;
@@ -50,10 +67,6 @@ sm_trace_t** sm_get_traces(const char* fname, size_t* entries)
   unsigned lines = 0;
 
   ASSERT((fp = fopen(fname, "r")), "sm_get_traces: couldn't open %s\n", fname);
-
-  // TODO mess around w/ this
-  //      verify perf improv w/ kcachegrind
-  /* posix_fadvise(fileno(fp), 0, 0, POSIX_FADV_SEQUENTIAL); */
 
   while ((ch = fgetc(fp)) != EOF) {
     if (ch == '\n')
