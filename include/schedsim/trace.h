@@ -24,6 +24,7 @@ typedef struct sm_trace_t {
   float deadline;       // time at which the process must stop
   int p;                // priority
   pthread_cond_t cond;
+  pthread_t tid;
 
   sm_out_trace_t out; // result
 } sm_trace_t;
