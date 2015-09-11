@@ -54,7 +54,6 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
   for (; i < traces_size; i++)
     sm_create_timer(traces[i]);
 
-  i = 0;
   while (traces_size) {
     sigwaitinfo(&intmask, &sig);
     trace = (sm_trace_t*)sig.si_ptr;
