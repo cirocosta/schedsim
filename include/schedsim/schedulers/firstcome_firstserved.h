@@ -9,7 +9,7 @@
 #include <sys/time.h>
 
 // main
-void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
+sm_scheduler_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
@@ -79,7 +79,7 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
     trace = NULL;
   }
 
-  sm_scheduler_destroy(sched);
+  return sched;
 }
 
 #endif
