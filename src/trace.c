@@ -21,7 +21,7 @@ void sm_trace_destroy(sm_trace_t* trace)
 
 void sm_out_trace_print(sm_trace_t* trace)
 {
-  LOGERR("%s %f %f", trace->pname, trace->out.tf, trace->out.tr);
+  LOGERR("%s %f %f", trace->pname, trace->out.tf/1e6, trace->out.tr/1e6);
 }
 
 void sm_trace_print(sm_trace_t* trace)

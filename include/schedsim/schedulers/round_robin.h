@@ -41,7 +41,6 @@ void sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
     sm_create_timer(traces[i]);
   // PREPARATION
 
-  i = 0;
   while (traces_size) {
     sigwaitinfo(&intmask, &sig);
 
@@ -62,20 +61,23 @@ void sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
         break;
 
       case SIGALRM:
-        LOGERR("quantum!");
+        i = 0;
+        // in case we have more CPUs than elements (also checks for empty q)
+        for (; i < sched->max_cpus && sched->proc_queue->length; i++) {
+          queue_trace = sm_queue_front(sched->proc_queue);
+          sm_queue_remove(sched->proc_queue);
+          sm_queue_insert(sched->proc_queue, sched->running_processes[i]);
+          sm_sched_release_process(sched, sched->running_processes[i]);
+          sm_sched_assign_process_to_cpu(sched, queue_trace);
+          sched->context_switches++;
+        }
+
         break;
 
       case SIG_PROCESS_END:
         trace = (sm_trace_t*)sig.si_ptr;
         LOGERR("Process `%s` Terminated!", trace->pname);
         sm_out_trace_print(trace);
-
-        sm_sched_release_process(sched, trace);
-        if (!sm_queue_empty(sched->proc_queue)) {
-          queue_trace = sm_queue_front(sched->proc_queue);
-          sm_queue_remove(sched->proc_queue);
-          sm_sched_assign_process_to_cpu(sched, queue_trace);
-        }
 
         traces_size--;
         LOGERR("Traces_size now: %lu", traces_size);

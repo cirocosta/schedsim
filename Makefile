@@ -24,7 +24,7 @@ SRCS = $(shell find src/ -name '*.c')
 LIB_OBJS := $(patsubst %.c, %.o, $(filter-out $(SOURCE), $(SRCS)))
 TESTS:= $(patsubst %.c, %.out, $(shell find $(TESTS_DIR) -name '*.c'))
 
-all: $(PROGRAM) test 
+all: $(PROGRAM) $(TESTS) 
 
 $(PROGRAM): $(LIB) $(SOURCE) $(HEADERS)
 	$(CC) $(CFLAGS) $(SOURCE) $(DEFS) $(INCLUDES) $(LIBS) -o $@ $<
