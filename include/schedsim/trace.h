@@ -24,10 +24,12 @@ typedef struct sm_trace_t {
   float dt;             // cpu real time
   float deadline;       // time at which the process must stop
   int p;                // priority
+
   pthread_t tid;
   sem_t sem;
   int blocked;
   int current_cpu;
+  double remaining_time;
 
   sm_out_trace_t out; // result
 } sm_trace_t;

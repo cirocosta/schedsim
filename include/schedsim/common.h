@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #define FREE(__ptr)                                                            \
   do {                                                                         \
     free(__ptr);                                                               \
@@ -60,8 +59,11 @@
 
 #define TEST(__test, ...)                                                      \
   do {                                                                         \
+    LOG("RUN\t%s: %s:" #__VA_ARGS__, __BASE_FILE__, #__test);                  \
+    fflush(stdout);                                                            \
     __test();                                                                  \
-    LOG("%s: %s:" #__VA_ARGS__ " OK!", __BASE_FILE__, #__test);                \
+    LOG("OK\t\t%s: %s:" #__VA_ARGS__, __BASE_FILE__, #__test);                 \
+    fflush(stdout);                                                            \
   } while (0)
 
 #ifndef NDEBUG

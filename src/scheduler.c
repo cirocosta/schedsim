@@ -59,8 +59,10 @@ void sm_sched_assign_process_to_cpu(sm_scheduler_t* sched, sm_trace_t* trace)
     if (!sched->running_processes[i])
       break;
 
-  sched->available_cpus--;
+  trace->blocked = 0;
   trace->current_cpu = i;
+  sched->available_cpus--;
+  sem_post(&trace->sem);
   sched->running_processes[i] = trace;
 
   LOGERR("process `%s` now using CPU `%d`", trace->pname, trace->current_cpu);
@@ -70,6 +72,7 @@ void sm_sched_release_process(sm_scheduler_t* sched, sm_trace_t* trace)
 {
   sched->running_processes[trace->current_cpu] = NULL;
   sched->available_cpus++;
+  trace->blocked = 1;
 
   LOGERR("process `%s` released CPU `%d`", trace->pname, trace->current_cpu);
 
@@ -79,12 +82,13 @@ void sm_sched_release_process(sm_scheduler_t* sched, sm_trace_t* trace)
 void sm_waste_time(sm_trace_t* trace)
 {
   struct timespec start, stop;
-  double end_time = trace->dt * 1e9; // nanosecs
-  double tot_time = 0;
   unsigned i;
 
-  while (tot_time < end_time) {
-    if (trace->blocked)
+  trace->remaining_time = trace->dt * 1e9; // nanosecs
+
+  while (trace->remaining_time > 0) {
+    // not 'if' because we may have trace->sem's value > 1
+    while (trace->blocked)
       sem_wait(&trace->sem);
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -94,7 +98,7 @@ void sm_waste_time(sm_trace_t* trace)
       ;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
-    tot_time +=
+    trace->remaining_time -=
         (stop.tv_sec - start.tv_sec) * 1e9 + (stop.tv_nsec - start.tv_nsec);
   }
 }
