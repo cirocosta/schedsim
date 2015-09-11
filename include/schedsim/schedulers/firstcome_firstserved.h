@@ -48,7 +48,6 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
         pthread_mutex_lock(&sched->proc_mutex);
         if (sm_sched_has_available_cpu(sched)) {
           sm_sched_assign_process_to_cpu(sched, trace);
-          trace->blocked = 0;
         } else {
           trace->blocked = 1;
           sm_queue_insert(sched->proc_queue, trace);
@@ -69,8 +68,6 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
           queue_trace = sm_queue_front(sched->proc_queue);
           sm_queue_remove(sched->proc_queue);
           sm_sched_assign_process_to_cpu(sched, queue_trace);
-          queue_trace->blocked = 0;
-          sem_post(&queue_trace->sem);
         }
         pthread_mutex_unlock(&sched->proc_mutex);
 

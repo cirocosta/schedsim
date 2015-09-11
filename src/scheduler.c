@@ -103,6 +103,27 @@ void sm_waste_time(sm_trace_t* trace)
   }
 }
 
+timer_t sm_create_quantum_timer()
+{
+  long long nanosecs = SM_QUANTUM_MS * 1e6;
+  struct itimerspec ts;
+  struct sigevent se;
+  timer_t tid;
+
+  se.sigev_notify = SIGEV_SIGNAL;
+  se.sigev_signo = SIGALRM;
+
+  ts.it_value.tv_sec = nanosecs / BILLION;
+  ts.it_value.tv_nsec = nanosecs % BILLION;
+  ts.it_interval.tv_sec = ts.it_value.tv_sec;
+  ts.it_interval.tv_nsec = ts.it_value.tv_nsec;
+
+  ASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid), "Couldn't create timer");
+  ASSERT(!timer_settime(tid, 0, &ts, 0), "Coudln't active timer");
+
+  return tid;
+}
+
 timer_t sm_create_timer(sm_trace_t* trace)
 {
   // trace->STUFF comes in secs (floating)
@@ -112,12 +133,11 @@ timer_t sm_create_timer(sm_trace_t* trace)
   timer_t tid;
 
   se.sigev_notify = SIGEV_SIGNAL;
-  se.sigev_signo = SIGUSR1;
+  se.sigev_signo = SIG_PROCESS_NEW;
   se.sigev_value.sival_ptr = trace;
 
   ts.it_value.tv_sec = nanosecs / BILLION;
   ts.it_value.tv_nsec = nanosecs % BILLION;
-  // do it only once (maybe we'll change this for round robin)
   ts.it_interval.tv_sec = 0;
   ts.it_interval.tv_nsec = 0;
 
