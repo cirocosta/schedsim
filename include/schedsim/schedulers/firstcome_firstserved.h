@@ -11,11 +11,16 @@
 void* process(void* arg)
 {
   sm_trace_t* trace = (sm_trace_t*)arg;
+  struct timeval t_end;
+  struct timeval t_start;
 
-  LOGERR("A process was spawned! %lu", pthread_self());
-  LOGERR("trace->dt %f", trace->dt);
-
+  gettimeofday(&t_start, NULL);
   sm_waste_time(trace);
+  gettimeofday(&t_end, NULL);
+
+  trace->out.t0 = t_start.tv_sec*1e6 + t_start.tv_usec;
+  trace->out.tf = t_end.tv_sec*1e6 + t_end.tv_usec;
+  trace->out.tr = trace->out.tf - trace->out.t0;
 
   sigqueue(getpid(), SIG_PROCESS_END, (const union sigval){.sival_ptr = arg });
   pthread_exit(EXIT_SUCCESS);
@@ -56,7 +61,8 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
 
     switch (sig.si_signo) {
       case SIG_PROCESS_NEW:
-        LOGERR("New Process!");
+        LOGERR("New process in the system!");
+        sm_trace_print(trace);
 
         pthread_mutex_lock(&sched->proc_mutex);
         if (sched->available_cpus > 0) {
@@ -72,7 +78,8 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
         break;
 
       case SIG_PROCESS_END:
-        LOGERR("Process Terminated! tid = %lu", trace->tid);
+        LOGERR("Process Terminated!");
+        sm_out_trace_print(trace);
 
         pthread_mutex_lock(&sched->proc_mutex);
         sched->available_cpus++;

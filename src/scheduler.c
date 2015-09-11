@@ -2,6 +2,7 @@
 
 sm_scheduler_t* sm_scheduler_create(sm_schedulers_e type)
 {
+  struct timeval t_start;
   sm_scheduler_t* sched = malloc(sizeof(*sched));
   PASSERT(sched, "Couldn't properly allocate memory");
 
@@ -9,6 +10,10 @@ sm_scheduler_t* sm_scheduler_create(sm_schedulers_e type)
   sched->available_cpus = sysconf(_SC_NPROCESSORS_ONLN);
   pthread_mutex_init(&sched->proc_mutex, NULL);
   sched->proc_queue = sm_queue_create();
+
+  gettimeofday(&t_start, NULL);
+
+  sched->start_time = t_start.tv_sec*1e6 + t_start.tv_usec;
 
   return sched;
 }
@@ -22,7 +27,7 @@ void sm_scheduler_destroy(sm_scheduler_t* sched)
 void sm_waste_time(sm_trace_t* trace)
 {
   struct timespec start, stop;
-  double end_time = trace->dt * 1e6;
+  double end_time = trace->dt * 1e9; // nanosecs
   double tot_time = 0;
   unsigned i;
 
@@ -32,13 +37,13 @@ void sm_waste_time(sm_trace_t* trace)
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
 
-    i = 1e6;
+    i = 1e8;
     while (i-- > 0)
       ;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
-    tot_time += (stop.tv_sec - start.tv_sec) * 1e6 +
-                (stop.tv_nsec - start.tv_nsec) / 1e3;
+    tot_time += (stop.tv_sec - start.tv_sec) * 1e9 +
+                (stop.tv_nsec - start.tv_nsec);
   }
 }
 

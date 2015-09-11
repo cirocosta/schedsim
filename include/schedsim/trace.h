@@ -27,6 +27,7 @@ typedef struct sm_trace_t {
   pthread_t tid;
   sem_t sem;
   int blocked;
+  int current_cpu;
 
   sm_out_trace_t out; // result
 } sm_trace_t;
@@ -36,7 +37,8 @@ sm_trace_t* sm_trace_create();
 void sm_trace_destroy(sm_trace_t* trace);
 
 // general
-void sm_print_out_trace(sm_out_trace_t);
+void sm_out_trace_print(sm_trace_t* trace);
+void sm_trace_print(sm_trace_t* trace);
 sm_trace_t* sm_parse_trace(const char* trace);
 sm_trace_t** sm_get_traces(const char* fname, size_t* entries);
 

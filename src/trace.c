@@ -7,7 +7,7 @@ sm_trace_t* sm_trace_create()
   sm_trace_t* trace = malloc(sizeof(*trace));
   PASSERT(trace, "couldn't allocate mem");
 
-  *trace = (sm_trace_t){0};
+  *trace = (sm_trace_t){ 0 };
   sem_init(&trace->sem, 0, 0);
 
   return trace;
@@ -17,6 +17,17 @@ void sm_trace_destroy(sm_trace_t* trace)
 {
   sem_destroy(&trace->sem);
   FREE(trace);
+}
+
+void sm_out_trace_print(sm_trace_t* trace)
+{
+  LOGERR("%s %f %f", trace->pname, trace->out.tf, trace->out.tr);
+}
+
+void sm_trace_print(sm_trace_t* trace)
+{
+  LOGERR("%f %s %f %f %d", trace->t0, trace->pname, trace->dt, trace->deadline,
+         trace->p);
 }
 
 sm_trace_t* sm_parse_trace(const char* trace)
