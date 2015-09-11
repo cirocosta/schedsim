@@ -7,13 +7,16 @@ sm_scheduler_t* sm_scheduler_create(sm_schedulers_e type)
   PASSERT(sched, "Couldn't properly allocate memory");
 
   sched->type = type;
-  sched->available_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+  sched->max_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+  sched->available_cpus = sched->max_cpus;
   pthread_mutex_init(&sched->proc_mutex, NULL);
   sched->proc_queue = sm_queue_create();
+  sched->running_processes =
+      calloc(sched->available_cpus, sizeof(*sched->running_processes));
 
   gettimeofday(&t_start, NULL);
 
-  sched->start_time = t_start.tv_sec*1e6 + t_start.tv_usec;
+  sched->start_time = t_start.tv_sec * 1e6 + t_start.tv_usec;
 
   return sched;
 }
@@ -22,6 +25,55 @@ void sm_scheduler_destroy(sm_scheduler_t* sched)
 {
   pthread_mutex_destroy(&sched->proc_mutex);
   sm_queue_destroy(sched->proc_queue);
+  FREE(sched->running_processes);
+}
+
+void* sm_user_process(void* arg)
+{
+  sm_trace_t* trace = (sm_trace_t*)arg;
+  struct timeval t_end;
+  struct timeval t_start;
+
+  gettimeofday(&t_start, NULL);
+  sm_waste_time(trace);
+  gettimeofday(&t_end, NULL);
+
+  trace->out.t0 = t_start.tv_sec * 1e6 + t_start.tv_usec;
+  trace->out.tf = t_end.tv_sec * 1e6 + t_end.tv_usec;
+  trace->out.tr = trace->out.tf - trace->out.t0;
+
+  sigqueue(getpid(), SIG_PROCESS_END, (const union sigval){.sival_ptr = arg });
+  pthread_exit(EXIT_SUCCESS);
+}
+
+int sm_sched_has_available_cpu(sm_scheduler_t* sched)
+{
+  return sched->available_cpus > 0;
+}
+
+void sm_sched_assign_process_to_cpu(sm_scheduler_t* sched, sm_trace_t* trace)
+{
+  unsigned i = 0;
+
+  for (; i < sched->max_cpus; i++)
+    if (!sched->running_processes[i])
+      break;
+
+  sched->available_cpus--;
+  trace->current_cpu = i;
+  sched->running_processes[i] = trace;
+
+  LOGERR("process `%s` now using CPU `%d`", trace->pname, trace->current_cpu);
+}
+
+void sm_sched_release_process(sm_scheduler_t* sched, sm_trace_t* trace)
+{
+  sched->running_processes[trace->current_cpu] = NULL;
+  sched->available_cpus++;
+
+  LOGERR("process `%s` released CPU `%d`", trace->pname, trace->current_cpu);
+
+  trace->current_cpu = -1;
 }
 
 void sm_waste_time(sm_trace_t* trace)
@@ -42,8 +94,8 @@ void sm_waste_time(sm_trace_t* trace)
       ;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
-    tot_time += (stop.tv_sec - start.tv_sec) * 1e9 +
-                (stop.tv_nsec - start.tv_nsec);
+    tot_time +=
+        (stop.tv_sec - start.tv_sec) * 1e9 + (stop.tv_nsec - start.tv_nsec);
   }
 }
 

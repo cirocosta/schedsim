@@ -8,24 +8,6 @@
 #include <errno.h>
 #include <sys/time.h>
 
-void* process(void* arg)
-{
-  sm_trace_t* trace = (sm_trace_t*)arg;
-  struct timeval t_end;
-  struct timeval t_start;
-
-  gettimeofday(&t_start, NULL);
-  sm_waste_time(trace);
-  gettimeofday(&t_end, NULL);
-
-  trace->out.t0 = t_start.tv_sec*1e6 + t_start.tv_usec;
-  trace->out.tf = t_end.tv_sec*1e6 + t_end.tv_usec;
-  trace->out.tr = trace->out.tf - trace->out.t0;
-
-  sigqueue(getpid(), SIG_PROCESS_END, (const union sigval){.sival_ptr = arg });
-  pthread_exit(EXIT_SUCCESS);
-}
-
 // main
 void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
 {
@@ -64,16 +46,16 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
         sm_trace_print(trace);
 
         pthread_mutex_lock(&sched->proc_mutex);
-        if (sched->available_cpus > 0) {
+        if (sm_sched_has_available_cpu(sched)) {
+          sm_sched_assign_process_to_cpu(sched, trace);
           trace->blocked = 0;
-          sched->available_cpus--;
         } else {
           trace->blocked = 1;
           sm_queue_insert(sched->proc_queue, trace);
         }
         pthread_mutex_unlock(&sched->proc_mutex);
 
-        pthread_create(&trace->tid, NULL, &process, sig.si_ptr);
+        pthread_create(&trace->tid, NULL, &sm_user_process, sig.si_ptr);
         break;
 
       case SIG_PROCESS_END:
@@ -81,10 +63,12 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
         sm_out_trace_print(trace);
 
         pthread_mutex_lock(&sched->proc_mutex);
-        sched->available_cpus++;
+        sm_sched_release_process(sched, trace);
+
         if (!sm_queue_empty(sched->proc_queue)) {
           queue_trace = sm_queue_front(sched->proc_queue);
           sm_queue_remove(sched->proc_queue);
+          sm_sched_assign_process_to_cpu(sched, queue_trace);
           queue_trace->blocked = 0;
           sem_post(&queue_trace->sem);
         }
@@ -93,6 +77,8 @@ void sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
         traces_size--;
         break;
     }
+
+    queue_trace = NULL;
     trace = NULL;
   }
 
