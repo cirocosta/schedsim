@@ -27,7 +27,7 @@ int main(const int argc, const char* argv[])
             (traces[i]->out.tf - sched->core->start_time) / 1e6,
             traces[i]->out.tr / 1e6);
   }
-  fprintf(fp, "%f", sched->core->context_switches);
+  fprintf(fp, "%f\n", sched->core->context_switches);
 
   fclose(fp);
   sm_scheduler_destroy(sched);

@@ -14,11 +14,11 @@
 typedef struct sm_core_t {
   sm_schedulers_e type;
   sm_queue_t* proc_queue;
-  pthread_mutex_t proc_mutex;
 
   unsigned char available_cpus;
   unsigned char max_cpus;
-  sm_trace_t** running_processes; // a proxy to CPUs
+  // a proxy to Processing Units
+  sm_trace_t** running_processes;
 
   double start_time;
   double context_switches;

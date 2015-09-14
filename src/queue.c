@@ -3,6 +3,7 @@
 sm_queue_t* sm_queue_create()
 {
   sm_queue_t* queue = malloc(sizeof(*queue));
+  PASSERT(queue, "Couldn't allocate memory properly");
 
   queue->f = 0;
   queue->r = 0;

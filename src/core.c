@@ -9,7 +9,6 @@ sm_core_t* sm_core_create(sm_schedulers_e type)
   sched->type = type;
   sched->max_cpus = sysconf(_SC_NPROCESSORS_ONLN);
   sched->available_cpus = sched->max_cpus;
-  pthread_mutex_init(&sched->proc_mutex, NULL);
   sched->proc_queue = sm_queue_create();
   sched->running_processes =
       calloc(sched->available_cpus, sizeof(*sched->running_processes));
@@ -23,7 +22,6 @@ sm_core_t* sm_core_create(sm_schedulers_e type)
 
 void sm_core_destroy(sm_core_t* sched)
 {
-  pthread_mutex_destroy(&sched->proc_mutex);
   sm_queue_destroy(sched->proc_queue);
   FREE(sched->running_processes);
 }
