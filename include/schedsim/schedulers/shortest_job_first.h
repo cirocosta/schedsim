@@ -1,5 +1,5 @@
-#ifndef SCHEDSIM__ROUND_ROBIN_H
-#define SCHEDSIM__ROUND_ROBIN_H
+#ifndef SCHEDSIM__SHORTEST_JOB_FIRST_H
+#define SCHEDSIM__SHORTEST_JOB_FIRST_H
 
 #include "schedsim/common.h"
 #include "schedsim/scheduler.h"
@@ -8,7 +8,16 @@
 #include <errno.h>
 #include <sys/time.h>
 
-sm_scheduler_t* sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
+int sm_sched_sort_sjf(const void* a, const void* b)
+{
+  sm_trace_t* at = (sm_trace_t*)(*(void**)a);
+  sm_trace_t* bt = (sm_trace_t*)(*(void**)b);
+
+  return at->dt - bt->dt;
+}
+
+// main
+sm_scheduler_t* sm_sched_shortest_job_first(sm_trace_t** traces, size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
@@ -21,7 +30,6 @@ sm_scheduler_t* sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
   if ((sigemptyset(&block_set) == -1) ||
       (sigaddset(&block_set, SIG_PROCESS_NEW) == -1) ||
       (sigaddset(&block_set, SIG_PROCESS_END) == -1) ||
-      (sigaddset(&block_set, SIGALRM) == -1) ||
       (sigprocmask(SIG_BLOCK, &block_set, NULL) == -1)) {
     LOGERR("Error setting thread signal mask: %s", strerror(errno));
     exit(EXIT_FAILURE);
@@ -29,25 +37,22 @@ sm_scheduler_t* sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
 
   if ((sigemptyset(&intmask) == -1) ||
       (sigaddset(&intmask, SIG_PROCESS_NEW) == -1) ||
-      (sigaddset(&intmask, SIGALRM) == -1) ||
       sigaddset(&intmask, SIG_PROCESS_END)) {
     perror("sig_setting error:");
     exit(EXIT_FAILURE);
   }
 
-  // preares the quantum timer (a timer that dispatches a given signal that we 
-  // decide in a regular basis).
-  sm_create_quantum_timer();
   for (; i < traces_size; i++)
     sm_create_timer(traces[i]);
   // PREPARATION
 
+  i = 0;
   while (traces_size) {
     sigwaitinfo(&intmask, &sig);
+    trace = (sm_trace_t*)sig.si_ptr;
 
     switch (sig.si_signo) {
       case SIG_PROCESS_NEW:
-        trace = (sm_trace_t*)sig.si_ptr;
         LOGERR("New process in the system!");
         sm_trace_print(trace);
 
@@ -56,37 +61,27 @@ sm_scheduler_t* sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
         } else {
           trace->blocked = 1;
           sm_queue_insert(sched->proc_queue, trace);
+          sm_queue_sort(sched->proc_queue, sm_sched_sort_sjf);
         }
 
         pthread_create(&trace->tid, NULL, &sm_user_process, sig.si_ptr);
         break;
 
-      // processes the QUANTUM signal
-      case SIGALRM:
-        i = 0;
-        // in case we have more CPUs than elements (also checks for empty q)
-        for (; i < sched->max_cpus && sched->proc_queue->length; i++) {
-          queue_trace = sm_queue_front(sched->proc_queue);
-          sm_queue_remove(sched->proc_queue);
-          sm_queue_insert(sched->proc_queue, sched->running_processes[i]);
-          sm_sched_release_process(sched, sched->running_processes[i]);
-          sm_sched_assign_process_to_cpu(sched, queue_trace);
-          sched->context_switches++;
-        }
-
-        break;
-
       case SIG_PROCESS_END:
-        trace = (sm_trace_t*)sig.si_ptr;
-        LOGERR("Process `%s` Terminated!", trace->pname);
+        LOGERR("Process Terminated!");
         sm_out_trace_print(trace);
 
+        sm_sched_release_process(sched, trace);
+        if (!sm_queue_empty(sched->proc_queue)) {
+          queue_trace = sm_queue_front(sched->proc_queue);
+          sm_queue_remove(sched->proc_queue);
+          sm_sched_assign_process_to_cpu(sched, queue_trace);
+        }
+
         traces_size--;
-        LOGERR("Traces_size now: %lu", traces_size);
         break;
     }
     trace = NULL;
-    queue_trace = NULL;
   }
 
   return sched;
