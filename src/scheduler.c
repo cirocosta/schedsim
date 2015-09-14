@@ -91,13 +91,13 @@ void sm_waste_time(sm_trace_t* trace)
     while (trace->blocked)
       sem_wait(&trace->sem);
 
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
 
     i = 1e8;
     while (i-- > 0)
       ;
 
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stop);
     trace->remaining_time -=
         (stop.tv_sec - start.tv_sec) * 1e9 + (stop.tv_nsec - start.tv_nsec);
   }

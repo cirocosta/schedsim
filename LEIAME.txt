@@ -1,0 +1,16 @@
+------------
+| schedsim |
+------------
+
+Simulador de escalonador de processos.
+
+
+Compilação
+---------
+Para compilar o simulador basta executar o comando `make` na raíz do projeto, o que irá então gerar o arquivo `schedsim`, também na raíz. 
+Resumindo:
+
+- make
+- ./schedsim [parametros]
+
+
