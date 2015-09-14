@@ -2,147 +2,50 @@
 
 sm_scheduler_t* sm_scheduler_create(sm_schedulers_e type)
 {
-  struct timeval t_start;
   sm_scheduler_t* sched = malloc(sizeof(*sched));
-  PASSERT(sched, "Couldn't properly allocate memory");
+  PASSERT(sched, "Couldn't allocate memory");
 
+  sched->core = NULL;
   sched->type = type;
-  sched->max_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-  sched->available_cpus = sched->max_cpus;
-  pthread_mutex_init(&sched->proc_mutex, NULL);
-  sched->proc_queue = sm_queue_create();
-  sched->running_processes =
-      calloc(sched->available_cpus, sizeof(*sched->running_processes));
-
-  gettimeofday(&t_start, NULL);
-
-  sched->start_time = t_start.tv_sec * 1e6 + t_start.tv_usec;
 
   return sched;
 }
 
 void sm_scheduler_destroy(sm_scheduler_t* sched)
 {
-  pthread_mutex_destroy(&sched->proc_mutex);
-  sm_queue_destroy(sched->proc_queue);
-  FREE(sched->running_processes);
+  sm_core_destroy(sched->core);
+  FREE(sched);
 }
 
-void* sm_user_process(void* arg)
+sm_scheduler_t* sm_scheduler_simulate(sm_schedulers_e type,
+                        sm_trace_t** traces, unsigned traces_count)
 {
-  sm_trace_t* trace = (sm_trace_t*)arg;
-  struct timeval t_end;
-  struct timeval t_start;
+  sm_scheduler_t* sched = sm_scheduler_create(type);
+  sm_core_t* core = NULL;
 
-  gettimeofday(&t_start, NULL);
-  sm_waste_time(trace);
-  gettimeofday(&t_end, NULL);
-
-  trace->out.t0 = t_start.tv_sec * 1e6 + t_start.tv_usec;
-  trace->out.tf = t_end.tv_sec * 1e6 + t_end.tv_usec;
-  trace->out.tr = trace->out.tf - trace->out.t0;
-
-  sigqueue(getpid(), SIG_PROCESS_END, (const union sigval){.sival_ptr = arg });
-  pthread_exit(EXIT_SUCCESS);
-}
-
-int sm_sched_has_available_cpu(sm_scheduler_t* sched)
-{
-  return sched->available_cpus > 0;
-}
-
-void sm_sched_assign_process_to_cpu(sm_scheduler_t* sched, sm_trace_t* trace)
-{
-  unsigned i = 0;
-
-  for (; i < sched->max_cpus; i++)
-    if (!sched->running_processes[i])
+  switch (type) {
+    case SM_FIRSTCOME_FIRSTSERVED:
+      core = sm_sched_firstcome_firstserved(traces, traces_count);
       break;
-
-  trace->blocked = 0;
-  trace->current_cpu = i;
-  sched->available_cpus--;
-  sem_post(&trace->sem);
-  sched->running_processes[i] = trace;
-
-  LOGERR("process `%s` now using CPU `%d`", trace->pname, trace->current_cpu);
-}
-
-void sm_sched_release_process(sm_scheduler_t* sched, sm_trace_t* trace)
-{
-  sched->running_processes[trace->current_cpu] = NULL;
-  sched->available_cpus++;
-  trace->blocked = 1;
-
-  LOGERR("process `%s` released CPU `%d`", trace->pname, trace->current_cpu);
-
-  trace->current_cpu = -1;
-}
-
-void sm_waste_time(sm_trace_t* trace)
-{
-  struct timespec start, stop;
-  unsigned i;
-
-  trace->remaining_time = trace->dt * 1e9; // nanosecs
-
-  while (trace->remaining_time > 0) {
-    // not 'if' because we may have trace->sem's value > 1
-    while (trace->blocked)
-      sem_wait(&trace->sem);
-
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
-
-    i = 1e8;
-    while (i-- > 0)
-      ;
-
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stop);
-    trace->remaining_time -=
-        (stop.tv_sec - start.tv_sec) * 1e9 + (stop.tv_nsec - start.tv_nsec);
+    case SM_S_JOB_FIRST:
+      core = sm_sched_shortest_job_first(traces, traces_count);
+      break;
+    case SM_S_REMAINING_TIME_NEXT:
+      core = sm_sched_shortest_remaining_time_next(traces, traces_count);
+      break;
+    case SM_ROUND_ROBIN:
+      core = sm_sched_round_robin(traces, traces_count);
+      break;
+    case SM_SCHED_WITH_PRIORITY:
+      LOGERR("Unsupported SCHED WITH PRIORITY");
+      break;
+    /* context_switches = sm_sched_priority_sched(traces, traces_count); */
+    case SM_RT_RIGID_DEADLINES:
+      LOGERR("Unsupported RIGIT DEADLINES");
+      break;
   }
-}
 
-timer_t sm_create_quantum_timer()
-{
-  long long nanosecs = SM_QUANTUM_MS * 1e6;
-  struct itimerspec ts;
-  struct sigevent se;
-  timer_t tid;
+  sched->core = core;
 
-  se.sigev_notify = SIGEV_SIGNAL;
-  se.sigev_signo = SIGALRM;
-
-  ts.it_value.tv_sec = nanosecs / BILLION;
-  ts.it_value.tv_nsec = nanosecs % BILLION;
-  ts.it_interval.tv_sec = ts.it_value.tv_sec;
-  ts.it_interval.tv_nsec = ts.it_value.tv_nsec;
-
-  ASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid), "Couldn't create timer");
-  ASSERT(!timer_settime(tid, 0, &ts, 0), "Coudln't active timer");
-
-  return tid;
-}
-
-timer_t sm_create_timer(sm_trace_t* trace)
-{
-  // trace->STUFF comes in secs (floating)
-  long long nanosecs = BILLION * trace->t0;
-  struct itimerspec ts;
-  struct sigevent se;
-  timer_t tid;
-
-  se.sigev_notify = SIGEV_SIGNAL;
-  se.sigev_signo = SIG_PROCESS_NEW;
-  se.sigev_value.sival_ptr = trace;
-
-  ts.it_value.tv_sec = nanosecs / BILLION;
-  ts.it_value.tv_nsec = nanosecs % BILLION;
-  ts.it_interval.tv_sec = 0;
-  ts.it_interval.tv_nsec = 0;
-
-  ASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid), "Couldn't create timer");
-  ASSERT(!timer_settime(tid, 0, &ts, 0), "Coudln't active timer");
-
-  return tid;
+  return sched;
 }

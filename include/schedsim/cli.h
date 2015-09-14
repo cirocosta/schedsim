@@ -62,5 +62,6 @@ typedef struct sm_cli_args_t {
 
 void sm_cli_help();
 sm_cli_args_t* sm_cli_parse(const int argc, const char** argv);
+void sm_cli_args_destroy(sm_cli_args_t* args);
 
 #endif

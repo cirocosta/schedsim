@@ -42,6 +42,6 @@ void sm_trace_destroy(sm_trace_t* trace);
 void sm_out_trace_print(sm_trace_t* trace);
 void sm_trace_print(sm_trace_t* trace);
 sm_trace_t* sm_parse_trace(const char* trace);
-sm_trace_t** sm_get_traces(const char* fname, size_t* entries);
+sm_trace_t** sm_trace_parse_file(const char* fname, size_t* entries);
 
 #endif

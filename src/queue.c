@@ -4,7 +4,6 @@ sm_queue_t* sm_queue_create()
 {
   sm_queue_t* queue = malloc(sizeof(*queue));
 
-  /* pthread_mutex_init(&queue->mut, NULL); */
   queue->f = 0;
   queue->r = 0;
   queue->length = 0;
@@ -16,13 +15,11 @@ sm_queue_t* sm_queue_create()
 
 void sm_queue_destroy(sm_queue_t* q)
 {
-  /* pthread_mutex_destroy(&q->mut); */
   FREE(q);
 }
 
 void sm_queue_sort(sm_queue_t* q, sm_queue_sort_func func)
 {
-  fprintf(stderr, "\nf = %u, length = %lu\n", q->f, q->length);
   qsort(q->elems, q->length, sizeof(void*), func);
 }
 

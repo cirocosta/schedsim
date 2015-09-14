@@ -2,21 +2,21 @@
 #define SCHEDSIM__PRIORITY_SCHED_H
 
 #include "schedsim/common.h"
-#include "schedsim/scheduler.h"
+#include "schedsim/core.h"
 
 #include <pthread.h>
 #include <errno.h>
 #include <sys/time.h>
 
 // main
-sm_scheduler_t* sm_sched_priority_sched(sm_trace_t** traces, size_t traces_size)
+inline static sm_core_t* sm_sched_priority_sched(sm_trace_t** traces, size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
   siginfo_t sig;
   sm_trace_t* trace = NULL;
   sm_trace_t* queue_trace = NULL;
-  sm_scheduler_t* sched = sm_scheduler_create(SM_S_JOB_FIRST);
+  sm_core_t* sched = sm_core_create(SM_S_JOB_FIRST);
 
   // PREPARATION
   if ((sigemptyset(&block_set) == -1) ||
@@ -36,9 +36,9 @@ sm_scheduler_t* sm_sched_priority_sched(sm_trace_t** traces, size_t traces_size)
     exit(EXIT_FAILURE);
   }
 
-  sm_create_quantum_timer();
+  sm_core_quantum_create();
   for (; i < traces_size; i++)
-    sm_create_timer(traces[i]);
+    sm_core_dispatcher_create(traces[i]);
   // PREPARATION
 
   while (traces_size) {
@@ -50,14 +50,14 @@ sm_scheduler_t* sm_sched_priority_sched(sm_trace_t** traces, size_t traces_size)
         LOGERR("New process in the system!");
         sm_trace_print(trace);
 
-        if (sm_sched_has_available_cpu(sched)) {
-          sm_sched_assign_process_to_cpu(sched, trace);
+        if (sm_core_has_available_cpu(sched)) {
+          sm_core_assign_process_to_cpu(sched, trace);
         } else {
           trace->blocked = 1;
           sm_queue_insert(sched->proc_queue, trace);
         }
 
-        pthread_create(&trace->tid, NULL, &sm_user_process, sig.si_ptr);
+        pthread_create(&trace->tid, NULL, &sm_core_process, sig.si_ptr);
         break;
 
       case SIGALRM:
@@ -67,8 +67,8 @@ sm_scheduler_t* sm_sched_priority_sched(sm_trace_t** traces, size_t traces_size)
           queue_trace = sm_queue_front(sched->proc_queue);
           sm_queue_remove(sched->proc_queue);
           sm_queue_insert(sched->proc_queue, sched->running_processes[i]);
-          sm_sched_release_process(sched, sched->running_processes[i]);
-          sm_sched_assign_process_to_cpu(sched, queue_trace);
+          sm_core_release_process(sched, sched->running_processes[i]);
+          sm_core_assign_process_to_cpu(sched, queue_trace);
           sched->context_switches++;
         }
 

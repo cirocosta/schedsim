@@ -2,21 +2,17 @@
 #define SCHEDSIM__FIRSTCOME_FIRSTSERVER_H
 
 #include "schedsim/common.h"
-#include "schedsim/scheduler.h"
-
-#include <pthread.h>
-#include <errno.h>
-#include <sys/time.h>
+#include "schedsim/core.h"
 
 // main
-sm_scheduler_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
+inline static sm_core_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
   siginfo_t sig;
   sm_trace_t* trace = NULL;
   sm_trace_t* queue_trace = NULL;
-  sm_scheduler_t* sched = sm_scheduler_create(SM_FIRSTCOME_FIRSTSERVED);
+  sm_core_t* sched = sm_core_create(SM_FIRSTCOME_FIRSTSERVED);
 
   if ((sigemptyset(&block_set) == -1) ||
       (sigaddset(&block_set, SIG_PROCESS_NEW) == -1) ||
@@ -34,7 +30,7 @@ sm_scheduler_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t trace
   }
 
   for (; i < traces_size; i++)
-    sm_create_timer(traces[i]);
+    sm_core_dispatcher_create(traces[i]);
 
   while (traces_size) {
     sigwaitinfo(&intmask, &sig);
@@ -46,15 +42,15 @@ sm_scheduler_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t trace
         sm_trace_print(trace);
 
         pthread_mutex_lock(&sched->proc_mutex);
-        if (sm_sched_has_available_cpu(sched)) {
-          sm_sched_assign_process_to_cpu(sched, trace);
+        if (sm_core_has_available_cpu(sched)) {
+          sm_core_assign_process_to_cpu(sched, trace);
         } else {
           trace->blocked = 1;
           sm_queue_insert(sched->proc_queue, trace);
         }
         pthread_mutex_unlock(&sched->proc_mutex);
 
-        pthread_create(&trace->tid, NULL, &sm_user_process, sig.si_ptr);
+        pthread_create(&trace->tid, NULL, &sm_core_process, sig.si_ptr);
         break;
 
       case SIG_PROCESS_END:
@@ -62,12 +58,12 @@ sm_scheduler_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t trace
         sm_out_trace_print(trace);
 
         pthread_mutex_lock(&sched->proc_mutex);
-        sm_sched_release_process(sched, trace);
+        sm_core_release_process(sched, trace);
 
         if (!sm_queue_empty(sched->proc_queue)) {
           queue_trace = sm_queue_front(sched->proc_queue);
           sm_queue_remove(sched->proc_queue);
-          sm_sched_assign_process_to_cpu(sched, queue_trace);
+          sm_core_assign_process_to_cpu(sched, queue_trace);
         }
         pthread_mutex_unlock(&sched->proc_mutex);
 

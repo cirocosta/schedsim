@@ -67,7 +67,7 @@ sm_trace_t* sm_parse_trace(const char* trace)
   return in_trace;
 }
 
-sm_trace_t** sm_get_traces(const char* fname, size_t* entries)
+sm_trace_t** sm_trace_parse_file(const char* fname, size_t* entries)
 {
   char buf[MAX_INPUT];
   sm_trace_t** traces = NULL;
@@ -75,7 +75,7 @@ sm_trace_t** sm_get_traces(const char* fname, size_t* entries)
   int ch;
   unsigned lines = 0;
 
-  ASSERT((fp = fopen(fname, "r")), "sm_get_traces: couldn't open %s\n", fname);
+  ASSERT((fp = fopen(fname, "r")), "sm_trace_parse_file: couldn't open %s\n", fname);
 
   while ((ch = fgetc(fp)) != EOF) {
     if (ch == '\n')

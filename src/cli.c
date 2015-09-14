@@ -31,3 +31,8 @@ sm_cli_args_t* sm_cli_parse(const int argc, const char** argv)
 
   return args;
 }
+
+void sm_cli_args_destroy(sm_cli_args_t* args)
+{
+  FREE(args);
+}
