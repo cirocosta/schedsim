@@ -60,7 +60,8 @@ sm_trace_t* sm_parse_trace(const char* trace)
   curr = end;
 
   // p: int
-  in_trace->p = strtol(curr, NULL, 10);
+  in_trace->p = strtol(curr, &end, 10);
+  DASSERT(curr != end, "%s", SM_ERR_MALFORMED_TRACE);
   DASSERT((in_trace->p < 20 && in_trace->p >= -20), "%s",
           SM_ERR_MALFORMED_TRACE);
 

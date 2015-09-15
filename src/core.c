@@ -26,7 +26,6 @@ void sm_core_destroy(sm_core_t* sched)
   FREE(sched->running_processes);
 }
 
-
 void* sm_core_process(void* arg)
 {
   sm_trace_t* trace = (sm_trace_t*)arg;
@@ -92,7 +91,7 @@ void sm_core_process_wastetime(sm_trace_t* trace)
 
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
 
-    i = 1e8;
+    i = 1e3;
     while (i-- > 0)
       ;
 
@@ -118,8 +117,10 @@ timer_t sm_core_quantum_create()
   ts.it_interval.tv_sec = ts.it_value.tv_sec;
   ts.it_interval.tv_nsec = ts.it_value.tv_nsec;
 
-  ASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid), "Couldn't create timer");
-  ASSERT(!timer_settime(tid, 0, &ts, 0), "Coudln't active timer");
+  PASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid),
+          "timer_create: Couldn't create timer\n");
+  PASSERT(!timer_settime(tid, 0, &ts, 0),
+          "timer_settime: Couldn't activate timer\n");
 
   return tid;
 }
@@ -141,8 +142,10 @@ timer_t sm_core_dispatcher_create(sm_trace_t* trace)
   ts.it_interval.tv_sec = 0;
   ts.it_interval.tv_nsec = 0;
 
-  PASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid), "Couldn't create timer");
-  PASSERT(!timer_settime(tid, 0, &ts, 0), "Coudln't active timer");
+  PASSERT(!timer_create(CLOCK_MONOTONIC, &se, &tid),
+          "timer_create: Couldn't create timer\n");
+  PASSERT(!timer_settime(tid, 0, &ts, 0),
+          "timer_settime: Couldn't activate timer\n");
 
   return tid;
 }

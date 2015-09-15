@@ -5,7 +5,8 @@
 #include "schedsim/core.h"
 
 // main
-inline static sm_core_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, size_t traces_size)
+inline static sm_core_t* sm_sched_firstcome_firstserved(sm_trace_t** traces,
+                                                        size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
@@ -41,14 +42,12 @@ inline static sm_core_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, siz
         LOGERR("New process in the system!");
         sm_trace_print(trace);
 
-        pthread_mutex_lock(&sched->proc_mutex);
         if (sm_core_has_available_cpu(sched)) {
           sm_core_assign_process_to_cpu(sched, trace);
         } else {
           trace->blocked = 1;
           sm_queue_insert(sched->proc_queue, trace);
         }
-        pthread_mutex_unlock(&sched->proc_mutex);
 
         pthread_create(&trace->tid, NULL, &sm_core_process, sig.si_ptr);
         break;
@@ -57,7 +56,6 @@ inline static sm_core_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, siz
         LOGERR("Process Terminated!");
         sm_out_trace_print(trace);
 
-        pthread_mutex_lock(&sched->proc_mutex);
         sm_core_release_process(sched, trace);
 
         if (!sm_queue_empty(sched->proc_queue)) {
@@ -65,7 +63,6 @@ inline static sm_core_t* sm_sched_firstcome_firstserved(sm_trace_t** traces, siz
           sm_queue_remove(sched->proc_queue);
           sm_core_assign_process_to_cpu(sched, queue_trace);
         }
-        pthread_mutex_unlock(&sched->proc_mutex);
 
         traces_size--;
         break;

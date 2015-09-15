@@ -9,14 +9,15 @@
 #include <sys/time.h>
 
 // main
-inline static sm_core_t* sm_sched_priority_sched(sm_trace_t** traces, size_t traces_size)
+inline static sm_core_t* sm_sched_priority_sched(sm_trace_t** traces,
+                                                 size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
   siginfo_t sig;
   sm_trace_t* trace = NULL;
   sm_trace_t* queue_trace = NULL;
-  sm_core_t* sched = sm_core_create(SM_S_JOB_FIRST);
+  sm_core_t* sched = sm_core_create(SM_SCHED_WITH_PRIORITY);
 
   // PREPARATION
   if ((sigemptyset(&block_set) == -1) ||
@@ -47,6 +48,7 @@ inline static sm_core_t* sm_sched_priority_sched(sm_trace_t** traces, size_t tra
     switch (sig.si_signo) {
       case SIG_PROCESS_NEW:
         trace = (sm_trace_t*)sig.si_ptr;
+        trace->remaining_quantums = 20 - trace->p;
         LOGERR("New process in the system!");
         sm_trace_print(trace);
 
@@ -62,12 +64,25 @@ inline static sm_core_t* sm_sched_priority_sched(sm_trace_t** traces, size_t tra
 
       case SIGALRM:
         i = 0;
+
         // in case we have more CPUs than elements (also checks for empty q)
         for (; i < sched->max_cpus && sched->proc_queue->length; i++) {
+          trace = sched->running_processes[i];
+
+          if (trace && trace->remaining_quantums) {
+            trace->remaining_quantums--;
+            continue;
+          }
+
           queue_trace = sm_queue_front(sched->proc_queue);
           sm_queue_remove(sched->proc_queue);
-          sm_queue_insert(sched->proc_queue, sched->running_processes[i]);
-          sm_core_release_process(sched, sched->running_processes[i]);
+
+          if (trace) {
+            trace->remaining_quantums = 20 - trace->p;
+            sm_queue_insert(sched->proc_queue, trace);
+            sm_core_release_process(sched, trace);
+          }
+
           sm_core_assign_process_to_cpu(sched, queue_trace);
           sched->context_switches++;
         }
@@ -78,6 +93,7 @@ inline static sm_core_t* sm_sched_priority_sched(sm_trace_t** traces, size_t tra
         trace = (sm_trace_t*)sig.si_ptr;
         LOGERR("Process `%s` Terminated!", trace->pname);
         sm_out_trace_print(trace);
+        sm_core_release_process(sched, trace);
 
         traces_size--;
         LOGERR("Traces_size now: %lu", traces_size);

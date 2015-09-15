@@ -4,14 +4,12 @@
 #include "schedsim/trace.h"
 #include "schedsim/common.h"
 
-// tests supposing a 4 cpu (including virtual cpus) machine
-void test2()
+void test1()
 {
-  unsigned traces_size = 3;
+  unsigned traces_size = 2;
   sm_trace_t* traces[] = { 
-    sm_parse_trace("1.0 process1 20 20"),
-    sm_parse_trace("1.0 process2 20 20"),
-    sm_parse_trace("1.0 process3 20 20"),
+    sm_parse_trace("1.0 process1 3 5 19"),
+    sm_parse_trace("1.0 process2 3 5 19"),
   };
 
   sm_sched_priority_sched(traces, traces_size);
@@ -20,18 +18,18 @@ void test2()
     sm_trace_destroy(traces[traces_size]);
 }
 
-void test1()
+void test2()
 {
   unsigned traces_size = 8;
   sm_trace_t* traces[] = { 
-    sm_parse_trace("1.0 process1 3 20"),
-    sm_parse_trace("1.0 process2 3 20"),
-    sm_parse_trace("1.0 process3 3 20"),
-    sm_parse_trace("1.0 process4 3 20"),
-    sm_parse_trace("1.0 process5 3 20"),
-    sm_parse_trace("1.0 process6 3 20"),
-    sm_parse_trace("1.0 process7 3 20"),
-    sm_parse_trace("1.0 process8 3 20"),
+    sm_parse_trace("1.0 process1 2 5 -20"),
+    sm_parse_trace("1.0 process2 2 5 19"),
+    sm_parse_trace("1.0 process3 2 5 19"),
+    sm_parse_trace("1.0 process4 2 5 19"),
+    sm_parse_trace("1.0 process5 2 5 19"),
+    sm_parse_trace("1.0 process6 2 5 19"),
+    sm_parse_trace("1.0 process7 2 5 19"),
+    sm_parse_trace("1.0 process8 2 5 19"),
   };
 
   sm_sched_priority_sched(traces, traces_size);
@@ -42,8 +40,8 @@ void test1()
 
 int main(int argc, char* argv[])
 {
-  /* TEST(test1); */
-  /* TEST(test2); */
+  TEST(test1);
+  TEST(test2);
 
   return 0;
 }
