@@ -1,17 +1,21 @@
 #include "schedsim/core.h"
 
-sm_core_t* sm_core_create(sm_schedulers_e type)
+sm_core_t* sm_core_create(sm_schedulers_e type, sm_core_sched_algorithm* alg)
 {
   struct timeval t_start;
   sm_core_t* sched = malloc(sizeof(*sched));
+
   PASSERT(sched, "Couldn't properly allocate memory");
 
+  sched->algorithm = alg;
   sched->type = type;
   sched->max_cpus = sysconf(_SC_NPROCESSORS_ONLN);
   sched->available_cpus = sched->max_cpus;
   sched->proc_queue = sm_queue_create();
+
   sched->running_processes =
       calloc(sched->available_cpus, sizeof(*sched->running_processes));
+  PASSERT(sched->available_cpus, "Couldn't properly allocate memory");
 
   gettimeofday(&t_start, NULL);
 
@@ -24,6 +28,56 @@ void sm_core_destroy(sm_core_t* sched)
 {
   sm_queue_destroy(sched->proc_queue);
   FREE(sched->running_processes);
+}
+
+sm_core_t* sm_core_run(sm_core_t* sched, sm_trace_t** traces, size_t traces_size)
+{
+  unsigned i = 0;
+  sigset_t intmask, block_set;
+  siginfo_t sig;
+
+  if ((sigemptyset(&block_set) == -1) ||
+      (sigaddset(&block_set, SIG_PROCESS_NEW) == -1) ||
+      (sigaddset(&block_set, SIG_PROCESS_END) == -1) ||
+      (sigaddset(&block_set, SIGALRM) == -1) ||
+      (sigprocmask(SIG_BLOCK, &block_set, NULL) == -1)) {
+    LOGERR("Error setting thread signal mask: %s", strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+
+  if ((sigemptyset(&intmask) == -1) ||
+      (sigaddset(&intmask, SIG_PROCESS_NEW) == -1) ||
+      (sigaddset(&intmask, SIGALRM) == -1) ||
+      sigaddset(&intmask, SIG_PROCESS_END)) {
+    perror("sig_setting error:");
+    exit(EXIT_FAILURE);
+  }
+
+  if (sched->type == SM_ROUND_ROBIN || sched->type == SM_SCHED_WITH_PRIORITY)
+    sm_core_quantum_create();
+
+  for (; i < traces_size; i++)
+    sm_core_dispatcher_create(traces[i]);
+
+  while (traces_size) {
+    sigwaitinfo(&intmask, &sig);
+
+    switch (sig.si_signo) {
+      case SIG_PROCESS_NEW:
+        sched->algorithm->on_process_new(sched, sig);
+        break;
+      case SIGALRM:
+        if (sched->algorithm->on_process_quantum)
+          sched->algorithm->on_process_quantum(sched, sig);
+        break;
+      case SIG_PROCESS_END:
+        sched->algorithm->on_process_end(sched, sig);
+        traces_size--;
+        break;
+    }
+  }
+
+  return sched;
 }
 
 void* sm_core_process(void* arg)

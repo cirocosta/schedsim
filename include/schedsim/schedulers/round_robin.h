@@ -4,10 +4,6 @@
 #include "schedsim/common.h"
 #include "schedsim/core.h"
 
-#include <pthread.h>
-#include <errno.h>
-#include <sys/time.h>
-
 inline static sm_core_t* sm_sched_round_robin(sm_trace_t** traces, size_t traces_size)
 {
   unsigned i = 0;

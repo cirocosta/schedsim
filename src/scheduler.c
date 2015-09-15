@@ -25,25 +25,26 @@ sm_scheduler_t* sm_scheduler_simulate(sm_schedulers_e type,
 
   switch (type) {
     case SM_FIRSTCOME_FIRSTSERVED:
-      core = sm_sched_firstcome_firstserved(traces, traces_count);
+      core = sm_core_create(type, sm_sched_alg_fcfs);
       break;
     case SM_S_JOB_FIRST:
-      core = sm_sched_shortest_job_first(traces, traces_count);
+      core = sm_core_create(type, sm_sched_alg_sjf);
       break;
     case SM_S_REMAINING_TIME_NEXT:
-      core = sm_sched_shortest_remaining_time_next(traces, traces_count);
+      core = sm_core_create(type, sm_sched_alg_srtn);
       break;
     case SM_ROUND_ROBIN:
-      core = sm_sched_round_robin(traces, traces_count);
+      core = sm_core_create(type, sm_sched_alg_rr);
       break;
     case SM_SCHED_WITH_PRIORITY:
-      LOGERR("Unsupported SCHED WITH PRIORITY");
+      core = sm_core_create(type, sm_sched_alg_ps);
       break;
-    /* context_switches = sm_sched_priority_sched(traces, traces_count); */
     case SM_RT_RIGID_DEADLINES:
-      LOGERR("Unsupported RIGIT DEADLINES");
+      core = sm_core_create(type, sm_sched_alg_rd);
       break;
   }
+
+  sm_core_run(core, traces, traces_count);
 
   sched->core = core;
 
