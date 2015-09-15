@@ -4,10 +4,6 @@
 #include "schedsim/common.h"
 #include "schedsim/core.h"
 
-#include <pthread.h>
-#include <errno.h>
-#include <sys/time.h>
-
 inline static int sm_sched_sort_srtn(const void* a, const void* b)
 {
   sm_trace_t* at = (sm_trace_t*)(*(void**)a);
