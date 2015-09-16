@@ -26,7 +26,7 @@ static const char* SM_CLI_HELP_TXT =
     "\t3\tShortest Remaining Time Next\n"
     "\t4\tRound-Robin\n"
     "\t5\tScheduling With Priority\n"
-    "\t6\tReal-Time scheduling with rigit Deadlines\n"
+    "\t6\tReal-Time scheduling with rigid Deadlines\n"
     "\n"
     "Input:\n"
     "\tt0 n dt dl p  (per process)\n"

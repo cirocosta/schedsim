@@ -9,10 +9,19 @@ Usage:
   ./schedsim <sched> <in> <out> [d]
 
 Parameters:
-  sched:    name of the scheduling algorithm
-  in:       name of the trace file (input)
-  out:      name of the result file (output) to be created
+  sched:    scheduling algorithm number [s_id] (see below)
+  in:       trace file (input) filename
+  out:      result file (output) to be created
   d:        (optional) output debug info to stderr
+
+Scheduling Algorithms:
+  s_id  name
+  1     First-Come First-Served
+  2     Shortest Job First
+  3     Shortest Remaining Time Next
+  4     Round-Robin
+  5     Priority Scheduling
+  6     Real-Time Scheduling with Rigid Deadlines
 
 Input:
   t0 n dt dl p  (per process)
