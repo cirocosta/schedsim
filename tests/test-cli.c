@@ -9,7 +9,7 @@ void test1()
 {
   const char* argv[] = { "./schedsim", "1", "hue.txt", "brbr.txt", NULL };
   const int argc = 4;
-  sm_cli_args_t expected = {.sched_alg = SM_FIRSTCOME_FIRSTSERVED,
+  sm_cli_args_t expected = {.sched_alg = SM_ALG_FCFS,
                             .in_fname = "hue.txt",
                             .out_fname = "brbr.txt",
                             .debug = 0 };

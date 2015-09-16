@@ -30,7 +30,8 @@ void sm_core_destroy(sm_core_t* sched)
   FREE(sched->running_processes);
 }
 
-sm_core_t* sm_core_run(sm_core_t* sched, sm_trace_t** traces, size_t traces_size)
+sm_core_t* sm_core_run(sm_core_t* sched, sm_trace_t** traces,
+                       size_t traces_size)
 {
   unsigned i = 0;
   sigset_t intmask, block_set;
@@ -53,7 +54,7 @@ sm_core_t* sm_core_run(sm_core_t* sched, sm_trace_t** traces, size_t traces_size
     exit(EXIT_FAILURE);
   }
 
-  if (sched->type == SM_ROUND_ROBIN || sched->type == SM_SCHED_WITH_PRIORITY)
+  if (sched->type == SM_ALG_RR || sched->type == SM_ALG_PS)
     sm_core_quantum_create();
 
   for (; i < traces_size; i++)

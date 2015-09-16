@@ -6,6 +6,7 @@
 #include "schedsim/schedulers/shortest_remaining_time_next.h"
 #include "schedsim/schedulers/round_robin.h"
 #include "schedsim/schedulers/priority_sched.h"
+#include "schedsim/schedulers/rigid_dealines.h"
 
 #include "schedsim/core.h"
 

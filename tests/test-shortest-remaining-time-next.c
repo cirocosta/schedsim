@@ -1,15 +1,14 @@
 #include <stdio.h>
 
-#include "schedsim/schedulers/shortest_remaining_time_next.h"
-#include "schedsim/trace.h"
-#include "schedsim/common.h"
+#include "schedsim/scheduler.h"
 
 // tests supposing a 4 cpu (including virtual cpus) machine
 
 void test1()
 {
+  sm_scheduler_t* scheduler = NULL;
   unsigned traces_size = 8;
-  sm_trace_t* traces[] = { 
+  sm_trace_t* traces[] = {
     sm_parse_trace("1.0 process0 5 10 10"),
     sm_parse_trace("1.1 process1 5 10 10"),
     sm_parse_trace("1.2 process2 5 10 10"),
@@ -20,10 +19,11 @@ void test1()
     sm_parse_trace("1.7 process7 1 10 10"),
   };
 
-  sm_sched_shortest_remaining_time_next(traces, traces_size);
+  scheduler = sm_scheduler_simulate(SM_ALG_SRTN, traces, traces_size);
 
-  while (traces_size --> 0)
+  while (traces_size-- > 0)
     sm_trace_destroy(traces[traces_size]);
+  sm_scheduler_destroy(scheduler);
 }
 
 int main(int argc, char* argv[])

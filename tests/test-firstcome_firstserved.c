@@ -1,8 +1,6 @@
 #include <stdio.h>
 
-#include "schedsim/schedulers/firstcome_firstserved.h"
-#include "schedsim/trace.h"
-#include "schedsim/common.h"
+#include "schedsim/scheduler.h"
 
 // tests supposing a 4 cpu (including virtual cpus) machine
 
@@ -13,7 +11,7 @@ void test1()
   sm_trace_t* trace3 = sm_parse_trace("1.2 process2 1 3 -20");
   sm_trace_t* traces[] = { trace, trace2, trace3 };
 
-  sm_sched_firstcome_firstserved(traces, 3);
+  sm_scheduler_simulate(SM_ALG_FCFS, traces, 3);
 
   sm_trace_destroy(trace);
   sm_trace_destroy(trace2);
@@ -34,7 +32,7 @@ void test2()
     sm_parse_trace("1 process8 1.5 3 -20"),
   };
 
-  sm_sched_firstcome_firstserved(traces, traces_size);
+  sm_scheduler_simulate(SM_ALG_FCFS, traces, 3);
 
   while (traces_size --> 0)
     sm_trace_destroy(traces[traces_size]);

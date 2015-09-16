@@ -18,8 +18,7 @@ sm_cli_args_t* sm_cli_parse(const int argc, const char** argv)
   ASSERT((args = malloc(sizeof(*args))), "Couldn't allocate memory");
   args->sched_alg = (sm_schedulers_e)strtoul(argv[1], NULL, 10);
 
-  if (args->sched_alg > SM_RT_RIGID_DEADLINES ||
-      args->sched_alg < SM_FIRSTCOME_FIRSTSERVED) {
+  if (args->sched_alg > SM_ALG_RD || args->sched_alg < SM_ALG_FCFS) {
     sm_cli_help();
     fprintf(stderr, "%s\n", "Error: invalid scheduling algorithm number.");
     exit(EXIT_FAILURE);

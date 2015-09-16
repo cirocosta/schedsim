@@ -17,30 +17,30 @@ void sm_scheduler_destroy(sm_scheduler_t* sched)
   FREE(sched);
 }
 
-sm_scheduler_t* sm_scheduler_simulate(sm_schedulers_e type,
-                        sm_trace_t** traces, unsigned traces_count)
+sm_scheduler_t* sm_scheduler_simulate(sm_schedulers_e type, sm_trace_t** traces,
+                                      unsigned traces_count)
 {
   sm_scheduler_t* sched = sm_scheduler_create(type);
   sm_core_t* core = NULL;
 
   switch (type) {
-    case SM_FIRSTCOME_FIRSTSERVED:
-      core = sm_core_create(type, sm_sched_alg_fcfs);
+    case SM_ALG_FCFS:
+      core = sm_core_create(type, &sm_sched_alg_fcfs);
       break;
-    case SM_S_JOB_FIRST:
-      core = sm_core_create(type, sm_sched_alg_sjf);
+    case SM_ALG_SJF:
+      core = sm_core_create(type, &sm_sched_alg_sjf);
       break;
-    case SM_S_REMAINING_TIME_NEXT:
-      core = sm_core_create(type, sm_sched_alg_srtn);
+    case SM_ALG_SRTN:
+      core = sm_core_create(type, &sm_sched_alg_srtn);
       break;
-    case SM_ROUND_ROBIN:
-      core = sm_core_create(type, sm_sched_alg_rr);
+    case SM_ALG_RR:
+      core = sm_core_create(type, &sm_sched_alg_rr);
       break;
-    case SM_SCHED_WITH_PRIORITY:
-      core = sm_core_create(type, sm_sched_alg_ps);
+    case SM_ALG_PS:
+      core = sm_core_create(type, &sm_sched_alg_ps);
       break;
-    case SM_RT_RIGID_DEADLINES:
-      core = sm_core_create(type, sm_sched_alg_rd);
+    case SM_ALG_RD:
+      core = sm_core_create(type, &sm_sched_alg_rd);
       break;
   }
 
