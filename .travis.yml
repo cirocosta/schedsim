@@ -2,7 +2,6 @@ sudo: false
 language: c
 compiler:
   - clang
-  - gcc
 addons:
   apt:
     sources:
@@ -16,13 +15,13 @@ addons:
 
 before_script:
   - export BUILD=debug
-  - if [ "$CXX" = "gcc" ]; then export CC="gcc-4.9"; fi
   - if [ "$CXX" = "clang" ]; then export CC="clang-3.6"; fi
   - make 
 
 script:
-  - make test
+  - make 
   - valgrind --leak-check=yes --error-exitcode=1 ./tests/test-cli.out
+  - for test in tests/*.out; do valgrind --leak-check=yes --error-exitcode=1 .$test; done
 
 notifications:
   email: false
