@@ -20,8 +20,7 @@ before_script:
 
 script:
   - make 
-  - valgrind --leak-check=yes --error-exitcode=1 ./tests/test-cli.out
-  - for test in tests/*.out; do valgrind --leak-check=yes --error-exitcode=1 .$test; done
+  - for test in tests/*.out; do valgrind --leak-check=yes --error-exitcode=1 ./$test; done
 
 notifications:
   email: false
